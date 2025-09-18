@@ -14,10 +14,10 @@ PacketWorker::~PacketWorker(){
 }
 
 void PacketWorker::startCapture(){
-    handle = pcap_open_live(dev.c_str(), BUFSIZ, 1, 10, ebuf);
+    handle = pcap_open_live(dev.c_str(), BUFSIZ, 1, 1, ebuf);
     if(!handle){
         emit finished();
-        return;
+        throw std::runtime_error(ebuf);
     }
 
     int link_type = pcap_datalink(handle);
@@ -25,6 +25,11 @@ void PacketWorker::startCapture(){
 
     if (link_type == DLT_EN10MB) handler = new EthernetHandler(all, tcp, udp, icmp);
     // else if (link_type == DLT_NULL || link_type == DLT_LOOP) handler = new LoopBackHandler(all, tcp, udp, icmp);
+    else{
+        qDebug("linkTypeError");
+        emit linkTypeError();
+        return;
+    }
 
     connect(handler, &BaseHandler::packetCaptured, this, &PacketWorker::packetCaptured);
     connect(handler, &BaseHandler::statReady, this, &PacketWorker::statReady);

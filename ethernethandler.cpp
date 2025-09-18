@@ -1,18 +1,13 @@
-// EthernetHandler:
-// - Processes raw Ethernet packets.
-// - Invokes header parsing.
-// - Checks packets for network threats.
-// - Stores statistics and outputs details.
-
-#include "ethernethandler.h"
 #include <iostream>
 #include <string>
 #include <thread>
 #include <fstream>
 #include <chrono>
 #include <nlohmann/json.hpp>
-#include <termcolor/termcolor.hpp>
 #include <QDebug>
+#include <QString>
+
+#include "ethernethandler.h"
 #include "ethernetheader.h"
 #include "ipv4header.h"
 #include "tcpheader.h"
@@ -33,36 +28,38 @@ EthernetHandler::EthernetHandler( bool all,  bool tcp,
     icmp_prot = icmp;
 }
 
-void EthernetHandler::printPayload(const u_char *payload, const uint32_t &len) const {
+QString EthernetHandler::getPayload(const u_char *payload, const uint32_t &len) const {
     int offset = 0;
+    QString hex;
 
     for (int i = 0; i < len; i += 16) {
-        std::cout << "0x" << std::hex << offset << ": ";
+        hex += QString("0x%1: ").arg(offset, 4, 16, QChar('0'));
 
         for (int j = 0; j < 16; ++j) {
             if (i + j < len) {
-                printf("%02x ", payload[i + j]);
+                hex += QString("%1 ").arg(payload[i + j], 2, 16, QChar('0'));
             } else {
-                printf("   ");
+                hex += "   ";
             }
         }
 
-        std::cout << " | ";
+        hex += " | ";
+
         for (int j = 0; j < 16; ++j) {
             if (i + j < len) {
                 const u_char ch = payload[i + j];
-                printf("%c", (ch >= 32 && ch <= 126) ? ch : '.');
+                hex += ((ch >= 32 && ch <= 126) ? QChar(ch) : QChar('.'));
             }
         }
-        std::cout << '\n';
+        hex += '\n';
 
         offset += 16;
     }
+    return hex;
 }
 
 void EthernetHandler::Handle(u_char *user, const struct pcap_pkthdr *header,
                              const u_char *packet) {
-    pack_count++;
     auto *data = reinterpret_cast<UserData *>(user);
 
     auto *ethernetHeader = (EthernetHeader *) packet;
@@ -81,6 +78,7 @@ void EthernetHandler::Handle(u_char *user, const struct pcap_pkthdr *header,
 
     //checking for suspicious
     if((icmp_prot || all_packets) && ipv4Header->protocolType() == 1){
+        show_packet = true;
         protocolCounter[ICMP] += 1;
         ipv4Counter[ipv4Header->getSrcIP()]++;
         ipv4Counter[ipv4Header->getDstIP()]++;
@@ -93,14 +91,15 @@ void EthernetHandler::Handle(u_char *user, const struct pcap_pkthdr *header,
 
         if(threatDec.isSuspiciousICMP(type) == true){
             packData.type = QString::fromStdString(type);
+            packData.threat = true;
             this->saveStatistic(user, header, packet, true, type);
-            show_packet = true;
         } else {
             packData.type = "-";
             this->saveStatistic(user, header, packet, false, type);
         }
 
     } if((tcp_prot || all_packets) && ipv4Header->protocolType() == 6){
+        show_packet = true;
         protocolCounter[TCP] += 1;
         ipv4Counter[ipv4Header->getSrcIP()]++;
         ipv4Counter[ipv4Header->getDstIP()]++;
@@ -114,14 +113,15 @@ void EthernetHandler::Handle(u_char *user, const struct pcap_pkthdr *header,
 
         if(threatDec.isSuspiciousTCP(type) == true){
             packData.type = QString::fromStdString(type);
+            packData.threat = true;
             this->saveStatistic(user, header, packet, true, type);
-            show_packet = true;
         } else {
             packData.type = "-";
             this->saveStatistic(user, header, packet, false, type);
         }
 
     } if((udp_prot || all_packets) && ipv4Header->protocolType() == 17){
+        show_packet = true;
         protocolCounter[UDP] += 1;
         ipv4Counter[ipv4Header->getSrcIP()]++;
         ipv4Counter[ipv4Header->getDstIP()]++;
@@ -133,8 +133,8 @@ void EthernetHandler::Handle(u_char *user, const struct pcap_pkthdr *header,
 
         if(threatDec.issuspiciousUDP(type) == true){
             packData.type = QString::fromStdString(type);
+            packData.threat = true;
             this->saveStatistic(user, header, packet, true, type);
-            show_packet = true;
         } else {
             packData.type = "-";
             this->saveStatistic(user, header, packet, false, type);
@@ -142,7 +142,8 @@ void EthernetHandler::Handle(u_char *user, const struct pcap_pkthdr *header,
 
     }
 
-    // if(show_packet == false) return;
+    if(show_packet == false) return;
+    pack_count++;
 
     std::cout << "packet len - " << std::dec << header->caplen << "\n\n";
     std::cout << "ETHERNET HEADER:"<< '\n';
@@ -154,8 +155,7 @@ void EthernetHandler::Handle(u_char *user, const struct pcap_pkthdr *header,
     //parse and output
     if (ipv4Header->protocolType() == 6) {
         packData.protocol = "TCP";
-        qDebug() << "Emitting packet:" << packData.protocol << packData.srcDst;
-        emit packetCaptured(packData);
+
         std::cout << '\n';
         auto *tcpHeader = (TCPHeader *) (packet + LINK_OFFSET + ipHeaderLength);
         std::cout << "TCP HEADER:"<< '\n';
@@ -170,17 +170,17 @@ void EthernetHandler::Handle(u_char *user, const struct pcap_pkthdr *header,
             std::cout << "PAYLOAD:"<< '\n';
         } else {
             std::cout << "no payload" << std::endl;
-            std::cout << termcolor::red << "\n[ " << termcolor::reset << threatDec.getThreatCount()
-                      << termcolor::red << " THREAT FOUND ]" << termcolor::reset << "\n";
+            std::cout << "\n[ " << threatDec.getThreatCount()
+                      << " THREAT FOUND ]" << "\n";
             return;
         }
 
         const u_char *payload = packet + LINK_OFFSET + ipHeaderLength + dataOffset;
-        printPayload(payload, payloadLength);
+        packData.hex = getPayload(payload, payloadLength);
+        emit packetCaptured(packData);
     } else if (ipv4Header->protocolType() == 17) {
         packData.protocol = "UDP";
-        qDebug() << "Emitting packet:" << packData.protocol << packData.srcDst;
-        emit packetCaptured(packData);
+
         std::cout << '\n';
         auto *udpHeader = (UDPHeader *) (packet + LINK_OFFSET + ipHeaderLength);
         std::cout << "UDP HEADER:"<< '\n';
@@ -194,17 +194,17 @@ void EthernetHandler::Handle(u_char *user, const struct pcap_pkthdr *header,
             std::cout << "PAYLOAD:"<< '\n';
         } else {
             std::cout << "no payload" << std::endl;
-            std::cout << termcolor::red << "\n[ " << termcolor::reset << threatDec.getThreatCount()
-                      << termcolor::red << " THREAT FOUND ]" << termcolor::reset << "\n";
+            std::cout << "\n[ " << threatDec.getThreatCount()
+                      << " THREAT FOUND ]" << "\n";
             return;
         }
 
         const u_char *payload = packet + LINK_OFFSET + ipHeaderLength + 8;
-        printPayload(payload, payloadLength);
+        packData.hex = getPayload(payload, payloadLength);
+        emit packetCaptured(packData);
     } else if (ipv4Header->protocolType() == 1) {
         packData.protocol = "ICMP";
-        qDebug() << "Emitting packet:" << packData.protocol << packData.srcDst;
-        emit packetCaptured(packData);
+
         std::cout << '\n';
         auto *icmpHeader = (ICMPHeader *) (packet + LINK_OFFSET + ipHeaderLength);
 
@@ -235,17 +235,19 @@ void EthernetHandler::Handle(u_char *user, const struct pcap_pkthdr *header,
             << " bytes" << std::endl;
             std::cout << "PAYLOAD:"<< '\n';
         } else {
+            packData.hex = "no payload";
             std::cout << "no payload" << std::endl;
-            std::cout << termcolor::red << "\n[ " << termcolor::reset << threatDec.getThreatCount()
-                      << termcolor::red << " THREAT FOUND ]" << termcolor::reset << "\n";
+            std::cout << "\n[ " <<  threatDec.getThreatCount()
+                      << " THREAT FOUND ]" << "\n";
             return;
         }
 
         const u_char *payload = packet + LINK_OFFSET + ipHeaderLength + icmpLen;
-        printPayload(payload, payloadLength);
+        packData.hex = getPayload(payload, payloadLength);
+        emit packetCaptured(packData);
     }
-    std::cout << termcolor::red << "\n[ " << termcolor::reset << threatDec.getThreatCount()
-              << termcolor::red << " THREAT FOUND ]" << termcolor::reset << "\n";
+    std::cout <<"\n[ " <<  threatDec.getThreatCount()
+              <<" THRE AT FOUND ]" << "\n";
 }
 
 void EthernetHandler::printStatistic() {

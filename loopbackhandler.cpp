@@ -1,16 +1,16 @@
-#include "loopbackhandler.h"
 #include <iostream>
 #include <fstream>
 #include <chrono>
 #include <nlohmann/json.hpp>
-#include <termcolor/termcolor.hpp>
+#include <thread>
+#include <QDebug>
+
+#include "loopbackhandler.h"
 #include "ethernetheader.h"
 #include "ipv4header.h"
 #include "tcpheader.h"
 #include "udpheader.h"
 #include "icmpheader.h"
-#include <thread>
-#include <QDebug>
 
 #define LINK_OFFSET 4
 
@@ -155,8 +155,8 @@ void LoopBackHandler::Handle(u_char *user, const struct pcap_pkthdr *header,
             std::cout << "PAYLOAD:"<< '\n';
         } else {
             std::cout << "no payload" << std::endl;
-            std::cout << termcolor::red << "\n[ " << termcolor::reset << threatDec.getThreatCount()
-                      << termcolor::red << " THREAT FOUND ]" << termcolor::reset << "\n";
+            std::cout << "\n[ " <<  threatDec.getThreatCount()
+                      << " THREAT FOUND ]" << "\n";
             return;
         }
 
@@ -179,8 +179,8 @@ void LoopBackHandler::Handle(u_char *user, const struct pcap_pkthdr *header,
             std::cout << "PAYLOAD:"<< '\n';
         } else {
             std::cout << "no payload" << std::endl;
-            std::cout << termcolor::red << "\n[ " << termcolor::reset << threatDec.getThreatCount()
-                      << termcolor::red << " THREAT FOUND ]" << termcolor::reset << "\n";
+            std::cout << "\n[ " << threatDec.getThreatCount()
+                      << " THREAT FOUND ]" << "\n";
             return;
         }
 
@@ -224,8 +224,8 @@ void LoopBackHandler::Handle(u_char *user, const struct pcap_pkthdr *header,
             std::cout << "PAYLOAD:"<< '\n';
         } else {
             std::cout << "no payload" << std::endl;
-            std::cout << termcolor::red << "\n[ " << termcolor::reset << threatDec.getThreatCount()
-                      << termcolor::red << " THREAT FOUND ]" << termcolor::reset << "\n";
+            std::cout << "\n[ " << threatDec.getThreatCount()
+                      << " THREAT FOUND ]" << "\n";
             return;
         }
 
@@ -235,8 +235,8 @@ void LoopBackHandler::Handle(u_char *user, const struct pcap_pkthdr *header,
     else{
         std::cout << "\nunknown IPV4 protocol\n";
     }
-    std::cout << termcolor::red << "\n[ " << termcolor::reset << threatDec.getThreatCount()
-              << termcolor::red << " THREAT FOUND ]" << termcolor::reset << "\n";
+    std::cout << "\n[ " << threatDec.getThreatCount()
+              << " THREAT FOUND ]" << "\n";
 }
 
 void LoopBackHandler::printStatistic() {

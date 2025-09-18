@@ -3,6 +3,8 @@
 
 #include <pcap.h>
 #include <string>
+#include <vector>
+#include <QString>
 #include <fstream>
 #include <iostream>
 #include <QString>
@@ -19,6 +21,8 @@ struct PacketData{
     QString protocol;
     QString type;
     QString srcDst;
+    QString hex;
+    bool threat = false;
 };
 
 class BaseHandler : public QObject{
@@ -35,9 +39,9 @@ public:
     static void StaticHandle(u_char *user,
         const struct pcap_pkthdr *header, const u_char *packet);
 signals:
-    void packetCaptured(PacketData);
+    void packetCaptured(const PacketData&);
 
-    void statReady(QString);
+    void statReady(const QString&);
 };
 
 struct UserData{

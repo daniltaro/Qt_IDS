@@ -4,7 +4,7 @@
 #include <pcap.h>
 #include <map>
 #include "threatdetector.h"
-#include "BaseHandler.h"
+#include "basehandler.h"
 
 class LoopBackHandler : public BaseHandler {
     threatDetector threatDec;

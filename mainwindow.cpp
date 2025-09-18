@@ -1,5 +1,3 @@
-#include "mainwindow.h"
-#include "./ui_mainwindow.h"
 #include <QDebug>
 #include <QFileDialog>
 #include <QMessageBox>
@@ -8,6 +6,8 @@
 #include "basehandler.h"
 #include "ethernethandler.h"
 #include "loopbackhandler.h"
+#include "mainwindow.h"
+#include "./ui_mainwindow.h"
 
 #include <fstream>
 #include <pcap.h>
@@ -92,7 +92,7 @@ void MainWindow::on_radioButton_ALL_pressed()
 
 void MainWindow::on_checkBox_ICMP_pressed()
 {
-    if(!ui->checkBox_ICMP->checkState() == Qt::Unchecked){
+    if(ui->checkBox_ICMP->checkState() == Qt::Checked){
         ui->radioButton_ALL->setChecked(false);
     }
 
@@ -101,7 +101,7 @@ void MainWindow::on_checkBox_ICMP_pressed()
 
 void MainWindow::on_checkBox_UDP_pressed()
 {
-    if(!ui->checkBox_UDP->checkState() == Qt::Unchecked){
+    if(ui->checkBox_UDP->checkState() == Qt::Checked){
         ui->radioButton_ALL->setChecked(false);
     }
 }
@@ -109,7 +109,7 @@ void MainWindow::on_checkBox_UDP_pressed()
 
 void MainWindow::on_checkBox_TCP_pressed()
 {
-    if(!ui->checkBox_TCP->checkState() == Qt::Unchecked){
+    if(ui->checkBox_TCP->checkState() == Qt::Checked){
         ui->radioButton_ALL->setChecked(false);
     }
 }

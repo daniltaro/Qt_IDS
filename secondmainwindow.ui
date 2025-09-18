@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1131</width>
-    <height>637</height>
+    <width>1240</width>
+    <height>697</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -17,37 +17,7 @@
    <property name="spacing">
     <number>5</number>
    </property>
-   <item row="3" column="1" colspan="2">
-    <widget class="QLabel" name="label">
-     <property name="font">
-      <font>
-       <pointsize>20</pointsize>
-       <bold>true</bold>
-      </font>
-     </property>
-     <property name="text">
-      <string>Running</string>
-     </property>
-    </widget>
-   </item>
-   <item row="0" column="1" rowspan="3" colspan="2">
-    <widget class="QListWidget" name="listWidget_2">
-     <property name="sizePolicy">
-      <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-       <horstretch>0</horstretch>
-       <verstretch>0</verstretch>
-      </sizepolicy>
-     </property>
-    </widget>
-   </item>
-   <item row="1" column="0" rowspan="6">
-    <widget class="QTextEdit" name="textEdit">
-     <property name="readOnly">
-      <bool>true</bool>
-     </property>
-    </widget>
-   </item>
-   <item row="6" column="2">
+   <item row="8" column="2">
     <widget class="QPushButton" name="pushButton">
      <property name="sizePolicy">
       <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
@@ -55,25 +25,76 @@
        <verstretch>0</verstretch>
       </sizepolicy>
      </property>
+     <property name="styleSheet">
+      <string notr="true">QPushButton {
+    background-color: #f0f0f0;
+    border: 1px solid #d0d0d0;
+    border-radius: 6px;
+    padding: 6px 12px;
+    font-size: 14px;
+    color: #333;
+}
+
+QPushButton:hover {
+    background-color: #e6e6e6;
+}
+
+QPushButton:pressed {
+    background-color: #dcdcdc;
+}</string>
+     </property>
      <property name="text">
       <string>Stop</string>
      </property>
      <property name="autoDefault">
       <bool>true</bool>
      </property>
-    </widget>
-   </item>
-   <item row="6" column="1">
-    <widget class="QPushButton" name="pushButton_2">
-     <property name="enabled">
+     <property name="default">
       <bool>false</bool>
      </property>
-     <property name="text">
-      <string>Start</string>
+     <property name="flat">
+      <bool>true</bool>
      </property>
     </widget>
    </item>
-   <item row="0" column="0">
+   <item row="1" column="0">
+    <widget class="QLineEdit" name="lineEdit">
+     <property name="enabled">
+      <bool>true</bool>
+     </property>
+     <property name="minimumSize">
+      <size>
+       <width>50</width>
+       <height>0</height>
+      </size>
+     </property>
+     <property name="font">
+      <font>
+       <pointsize>-1</pointsize>
+       <bold>false</bold>
+      </font>
+     </property>
+     <property name="autoFillBackground">
+      <bool>false</bool>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">QLineEdit {
+    border: 1px solid #c0c0c0;
+    border-radius: 6px;
+    padding: 6px;
+    font-size: 14px;
+    background-color: #fafafa;
+    color: #333;
+}
+
+QLineEdit:focus {
+    border: 1px solid #0078d7; 
+    background-color: #ffffff;
+}</string>
+     </property>
+    </widget>
+   </item>
+   <item row="3" column="0">
     <widget class="QTableWidget" name="tableWidget">
      <property name="sizePolicy">
       <sizepolicy hsizetype="MinimumExpanding" vsizetype="Expanding">
@@ -83,9 +104,27 @@
      </property>
      <property name="minimumSize">
       <size>
-       <width>350</width>
+       <width>100</width>
        <height>0</height>
       </size>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">QTableWidget {
+    border: 1px solid #d0d0d0;
+    border-radius: 6px;
+    gridline-color: #e0e0e0;
+    background-color: #fafafa;
+    selection-background-color: #0078d7;
+    selection-color: white;
+}
+
+QHeaderView::section {
+    background-color: #f5f5f5;
+    padding: 6px;
+    border: 1px solid #d0d0d0;
+    font-weight: bold;
+    color: #444;
+}</string>
      </property>
      <property name="editTriggers">
       <set>QAbstractItemView::EditTrigger::NoEditTriggers</set>
@@ -94,7 +133,10 @@
       <bool>false</bool>
      </property>
      <property name="selectionMode">
-      <enum>QAbstractItemView::SelectionMode::MultiSelection</enum>
+      <enum>QAbstractItemView::SelectionMode::SingleSelection</enum>
+     </property>
+     <property name="selectionBehavior">
+      <enum>QAbstractItemView::SelectionBehavior::SelectRows</enum>
      </property>
      <attribute name="horizontalHeaderStretchLastSection">
       <bool>true</bool>
@@ -135,29 +177,252 @@
      </column>
     </widget>
    </item>
-   <item row="4" column="1" colspan="2">
+   <item row="7" column="1" colspan="2">
+    <widget class="QPushButton" name="pushButton_4">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">QPushButton {
+    background-color: #f0f0f0;
+    border: 1px solid #d0d0d0;
+    border-radius: 6px;
+    padding: 6px 12px;
+    font-size: 14px;
+    color: #333;
+}
+
+QPushButton:hover {
+    background-color: #e6e6e6;
+}
+
+QPushButton:pressed {
+    background-color: #dcdcdc;
+}</string>
+     </property>
+     <property name="text">
+      <string>Save</string>
+     </property>
+     <property name="autoDefault">
+      <bool>true</bool>
+     </property>
+    </widget>
+   </item>
+   <item row="4" column="0" rowspan="5">
+    <widget class="QTextEdit" name="textEdit">
+     <property name="font">
+      <font>
+       <family>Courier New</family>
+       <pointsize>-1</pointsize>
+      </font>
+     </property>
+     <property name="focusPolicy">
+      <enum>Qt::FocusPolicy::NoFocus</enum>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">QTextEdit {
+    border: 1px solid #c0c0c0;
+    border-radius: 6px;
+    padding: 6px;
+    font-size: 14px;
+    background-color: #fafafa;
+    color: #333;
+}
+
+QTextEdit:focus {
+    border: 1px solid #0078d7;
+    background-color: #ffffff;
+}</string>
+     </property>
+     <property name="lineWrapMode">
+      <enum>QTextEdit::LineWrapMode::NoWrap</enum>
+     </property>
+     <property name="readOnly">
+      <bool>true</bool>
+     </property>
+    </widget>
+   </item>
+   <item row="0" column="0">
+    <widget class="QLabel" name="label_2">
+     <property name="font">
+      <font>
+       <family>Arial</family>
+       <pointsize>18</pointsize>
+      </font>
+     </property>
+     <property name="text">
+      <string>Filters:</string>
+     </property>
+    </widget>
+   </item>
+   <item row="8" column="1">
+    <widget class="QPushButton" name="pushButton_2">
+     <property name="enabled">
+      <bool>false</bool>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">QPushButton {
+    background-color: #f0f0f0;
+    border: 1px solid #d0d0d0;
+    border-radius: 6px;
+    padding: 6px 12px;
+    font-size: 14px;
+    color: #333;
+}
+
+QPushButton:hover {
+    background-color: #e6e6e6;
+}
+
+QPushButton:pressed {
+    background-color: #dcdcdc;
+}</string>
+     </property>
+     <property name="text">
+      <string>Start</string>
+     </property>
+     <property name="autoDefault">
+      <bool>false</bool>
+     </property>
+     <property name="flat">
+      <bool>true</bool>
+     </property>
+    </widget>
+   </item>
+   <item row="4" column="1" rowspan="2" colspan="2">
+    <widget class="QLabel" name="label">
+     <property name="font">
+      <font>
+       <family>Arial</family>
+       <pointsize>18</pointsize>
+       <bold>false</bold>
+      </font>
+     </property>
+     <property name="text">
+      <string>Running</string>
+     </property>
+    </widget>
+   </item>
+   <item row="1" column="1" rowspan="3" colspan="2">
+    <widget class="QTextEdit" name="textEdit_2">
+     <property name="minimumSize">
+      <size>
+       <width>650</width>
+       <height>0</height>
+      </size>
+     </property>
+     <property name="font">
+      <font>
+       <family>Courier New</family>
+       <pointsize>-1</pointsize>
+      </font>
+     </property>
+     <property name="focusPolicy">
+      <enum>Qt::FocusPolicy::NoFocus</enum>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">QTextEdit {
+    border: 1px solid #c0c0c0;
+    border-radius: 6px;
+    padding: 6px;
+    font-size: 14px;
+    background-color: #fafafa;
+    color: #333;
+}
+
+QTextEdit:focus {
+    border: 1px solid #0078d7;
+    background-color: #ffffff;
+}</string>
+     </property>
+     <property name="lineWrapMode">
+      <enum>QTextEdit::LineWrapMode::NoWrap</enum>
+     </property>
+     <property name="readOnly">
+      <bool>true</bool>
+     </property>
+    </widget>
+   </item>
+   <item row="6" column="1" colspan="2">
     <widget class="QPushButton" name="pushButton_3">
      <property name="sizePolicy">
-      <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+      <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
        <horstretch>0</horstretch>
        <verstretch>0</verstretch>
       </sizepolicy>
      </property>
      <property name="minimumSize">
       <size>
-       <width>350</width>
+       <width>400</width>
        <height>0</height>
       </size>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">QPushButton {
+    background-color: #f0f0f0;
+    border: 1px solid #d0d0d0;
+    border-radius: 6px;
+    padding: 6px 12px;
+    font-size: 14px;
+    color: #333;
+}
+
+QPushButton:hover {
+    background-color: #e6e6e6;
+}
+
+QPushButton:pressed {
+    background-color: #dcdcdc;
+}</string>
      </property>
      <property name="text">
       <string>Back</string>
      </property>
+     <property name="autoDefault">
+      <bool>false</bool>
+     </property>
     </widget>
    </item>
-   <item row="5" column="1" colspan="2">
-    <widget class="QPushButton" name="pushButton_4">
+   <item row="2" column="0">
+    <widget class="QRadioButton" name="radioButton">
+     <property name="enabled">
+      <bool>true</bool>
+     </property>
+     <property name="font">
+      <font>
+       <family>Arial</family>
+       <pointsize>-1</pointsize>
+      </font>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">QRadioButton {
+    spacing: 6px;
+    font-size: 14px;
+    color: #333;
+}
+
+QRadioButton::indicator {
+    width: 16px;
+    height: 16px;
+    border-radius: 8px;
+    border: 2px solid #c0c0c0;
+    background: #fafafa;
+}
+
+QRadioButton::indicator:hover {
+    border: 2px solid #0078d7;
+}
+
+QRadioButton::indicator:checked {
+    border: 2px solid #0078d7;
+    background-color: #0078d7;
+}</string>
+     </property>
      <property name="text">
-      <string>Save</string>
+      <string>Show only threats</string>
      </property>
     </widget>
    </item>

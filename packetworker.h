@@ -19,9 +19,11 @@ public slots:
     void stopCapture();
 
 signals:
-    void packetCaptured(PacketData);
+    void packetCaptured(const PacketData&);
 
-    void statReady(QString);
+    void statReady(const QString&);
+
+    void linkTypeError();
 
     void finished();
 

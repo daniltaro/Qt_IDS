@@ -17,6 +17,37 @@
    <layout class="QGridLayout" name="gridLayout">
     <item row="3" column="0">
      <widget class="QCheckBox" name="checkBox_UDP">
+      <property name="font">
+       <font>
+        <family>Arial</family>
+        <pointsize>-1</pointsize>
+       </font>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">QCheckBox {
+    spacing: 6px;
+    font-size: 14px;
+    color: #333;
+}
+
+QCheckBox::indicator {
+    width: 16px;
+    height: 16px;
+    border-radius: 3px;
+    border: 2px solid #c0c0c0;
+    background: #fafafa;
+}
+
+QCheckBox::indicator:hover {
+    border: 2px solid #0078d7;
+}
+
+QCheckBox::indicator:checked {
+    border: 2px solid #0078d7;
+    background-color: #0078d7;
+    image: url(:/qt-project.org/styles/commonstyle/images/checkmark.png);
+}</string>
+      </property>
       <property name="text">
        <string>UDP</string>
       </property>
@@ -33,6 +64,37 @@
     </item>
     <item row="5" column="0">
      <widget class="QCheckBox" name="checkBox_TCP">
+      <property name="font">
+       <font>
+        <family>Arial</family>
+        <pointsize>-1</pointsize>
+       </font>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">QCheckBox {
+    spacing: 6px;
+    font-size: 14px;
+    color: #333;
+}
+
+QCheckBox::indicator {
+    width: 16px;
+    height: 16px;
+    border-radius: 3px;
+    border: 2px solid #c0c0c0;
+    background: #fafafa;
+}
+
+QCheckBox::indicator:hover {
+    border: 2px solid #0078d7;
+}
+
+QCheckBox::indicator:checked {
+    border: 2px solid #0078d7;
+    background-color: #0078d7;
+    image: url(:/qt-project.org/styles/commonstyle/images/checkmark.png);
+}</string>
+      </property>
       <property name="text">
        <string>TCP</string>
       </property>
@@ -49,6 +111,37 @@
     </item>
     <item row="4" column="0">
      <widget class="QCheckBox" name="checkBox_ICMP">
+      <property name="font">
+       <font>
+        <family>Arial</family>
+        <pointsize>-1</pointsize>
+       </font>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">QCheckBox {
+    spacing: 6px;
+    font-size: 14px;
+    color: #333;
+}
+
+QCheckBox::indicator {
+    width: 16px;
+    height: 16px;
+    border-radius: 3px;
+    border: 2px solid #c0c0c0;
+    background: #fafafa;
+}
+
+QCheckBox::indicator:hover {
+    border: 2px solid #0078d7;
+}
+
+QCheckBox::indicator:checked {
+    border: 2px solid #0078d7;
+    background-color: #0078d7;
+    image: url(:/qt-project.org/styles/commonstyle/images/checkmark.png);
+}</string>
+      </property>
       <property name="text">
        <string>ICMP</string>
       </property>
@@ -67,7 +160,8 @@
      <widget class="QLabel" name="label">
       <property name="font">
        <font>
-        <pointsize>15</pointsize>
+        <family>Arial</family>
+        <pointsize>18</pointsize>
        </font>
       </property>
       <property name="text">
@@ -76,10 +170,56 @@
      </widget>
     </item>
     <item row="1" column="0">
-     <widget class="QListWidget" name="listWidget"/>
+     <widget class="QListWidget" name="listWidget">
+      <property name="styleSheet">
+       <string notr="true">QListWidget {
+    border: 1px solid #d0d0d0;
+    border-radius: 6px;
+    background-color: #fafafa;
+    padding: 4px;
+}
+
+QListWidget::item:selected {
+    background-color: #0078d7;
+    color: white;
+    border-radius: 4px;
+}
+</string>
+      </property>
+     </widget>
     </item>
     <item row="6" column="0">
      <widget class="QRadioButton" name="radioButton_ALL">
+      <property name="font">
+       <font>
+        <family>Arial</family>
+        <pointsize>-1</pointsize>
+       </font>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">QRadioButton {
+    spacing: 6px;
+    font-size: 14px;
+    color: #333;
+}
+
+QRadioButton::indicator {
+    width: 16px;
+    height: 16px;
+    border-radius: 8px;
+    border: 2px solid #c0c0c0;
+    background: #fafafa;
+}
+
+QRadioButton::indicator:hover {
+    border: 2px solid #0078d7;
+}
+
+QRadioButton::indicator:checked {
+    border: 2px solid #0078d7;
+    background-color: #0078d7;
+}</string>
+      </property>
       <property name="text">
        <string>ALL</string>
       </property>
@@ -96,6 +236,24 @@
     </item>
     <item row="7" column="0">
      <widget class="QPushButton" name="pushButton">
+      <property name="styleSheet">
+       <string notr="true">QPushButton {
+    background-color: #f0f0f0;
+    border: 1px solid #d0d0d0;
+    border-radius: 6px;
+    padding: 6px 12px;
+    font-size: 14px;
+    color: #333;
+}
+
+QPushButton:hover {
+    background-color: #e6e6e6;
+}
+
+QPushButton:pressed {
+    background-color: #dcdcdc;
+}</string>
+      </property>
       <property name="text">
        <string>Start</string>
       </property>
@@ -111,7 +269,8 @@
      <widget class="QLabel" name="label_2">
       <property name="font">
        <font>
-        <pointsize>15</pointsize>
+        <family>Arial</family>
+        <pointsize>18</pointsize>
        </font>
       </property>
       <property name="text">
@@ -127,7 +286,7 @@
      <x>0</x>
      <y>0</y>
      <width>406</width>
-     <height>24</height>
+     <height>30</height>
     </rect>
    </property>
   </widget>

@@ -3,8 +3,9 @@
 
 #include <pcap.h>
 #include <map>
+#include <QString>
 #include "threatdetector.h"
-#include "BaseHandler.h"
+#include "basehandler.h"
 
 class EthernetHandler : public BaseHandler {
     threatDetector threatDec;
@@ -19,7 +20,7 @@ class EthernetHandler : public BaseHandler {
     std::map<protocolType, int> protocolCounter;
     std::map<std::string, int> ipv4Counter;
 
-    void printPayload(const u_char *payload, const uint32_t &len) const;
+    QString getPayload(const u_char *payload, const uint32_t &len) const;
 
 public:
     EthernetHandler(bool all, bool tcp, bool udp, bool icmp);

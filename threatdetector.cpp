@@ -1,6 +1,5 @@
 #include "threatdetector.h"
 #include <iostream>
-#include <termcolor/termcolor.hpp>
 
 bool threatDetector::isSuspiciousICMP(std::string& type){
     auto now = std::chrono::steady_clock::now();
@@ -13,8 +12,7 @@ bool threatDetector::isSuspiciousICMP(std::string& type){
             flag = true;
 
             type += "[ICMP FLOOD] ";
-            std::cout << termcolor::red << "[ICMP FLOOD] " <<
-                termcolor::reset << "detected\n";
+            std::cout << "[ICMP FLOOD] " << "detected\n";
         } else {
             start_timeICMP = now;
             icmp_count = 0;
@@ -37,8 +35,7 @@ bool threatDetector::isSuspiciousTCP(std::string& type){
             threatCount++;
 
             type += "[SYN FLOOD] ";
-            std::cout << termcolor::red << "[SYN FLOOD] " <<
-                termcolor::reset << "detected\n";
+            std::cout << "[SYN FLOOD] " << "detected\n";
         } else {
             start_timeTCP = now;
             tcpACK = 0;
@@ -51,8 +48,7 @@ bool threatDetector::isSuspiciousTCP(std::string& type){
                 threatCount++;
 
                 type += "[TCP PORT SCANING] ";
-                std::cout << termcolor::red << "[TCP PORT SCANING] " <<
-                    termcolor::reset << "detected\n";
+                std::cout << "[TCP PORT SCANING] " << "detected\n";
             }
         }
     }
@@ -72,8 +68,7 @@ bool threatDetector::issuspiciousUDP(std::string& type){
             threatCount++;
 
             type += "[UDP FLOOD] ";
-            std::cout << termcolor::red << "[UDP FLOOD] " <<
-                termcolor::reset << "detected\n";
+            std::cout << "[UDP FLOOD] " << "detected\n";
         } else {
             UDP_packets = 0;
             start_timeUDP = now;
@@ -85,8 +80,7 @@ bool threatDetector::issuspiciousUDP(std::string& type){
                 threatCount++;
 
                 type += "[UDP PORT SCANING] ";
-                std::cout << termcolor::red << "[UDP PORT SCANING] " <<
-                    termcolor::reset << "detected\n";
+                std::cout << "[UDP PORT SCANING] " << "detected\n";
             }
         }
 

@@ -9,8 +9,8 @@ set(CMAKE_AUTORCC ON)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets)
-find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets)
+find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets Core)
+find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets Core)
 find_library(PCAP_LIB pcap  REQUIRED)
 find_package(nlohmann_json REQUIRED)
 message(STATUS "PCAP_LIB - "${PCAP_LIB})
@@ -20,6 +20,9 @@ set(PROJECT_SOURCES
         mainwindow.cpp
         mainwindow.h
         mainwindow.ui
+        secondmainwindow.h
+        secondmainwindow.cpp
+        secondmainwindow.ui
 )
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
@@ -27,7 +30,6 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
 qt_add_executable(my_IDS
         MANUAL_FINALIZATION
         ${PROJECT_SOURCES}
-        secondmainwindow.h secondmainwindow.cpp secondmainwindow.ui
         threatdetector.h threatdetector.cpp
         basehandler.h basehandler.cpp
         ethernethandler.h ethernethandler.cpp
@@ -59,6 +61,7 @@ endif()
 
 target_link_libraries(my_IDS PRIVATE
     Qt${QT_VERSION_MAJOR}::Widgets
+    Qt${QT_VERSION_MAJOR}::Core
     ${PCAP_LIB}
     nlohmann_json::nlohmann_json
 )
