@@ -25,13 +25,13 @@ class EthernetHandler : public BaseHandler {
 public:
     EthernetHandler(bool all, bool tcp, bool udp, bool icmp);
 
-    void Handle(u_char *user, const struct pcap_pkthdr *header, const u_char *packet);
+    void Handle( const struct pcap_pkthdr *header, const u_char *packet);
 
     void printStatistic();
 
     void saveGenStatistic();
 
-    void saveStatistic(u_char *user, const struct pcap_pkthdr *header, const u_char *packet,
+    void saveStatistic(const struct pcap_pkthdr *header, const u_char *packet,
                        bool flag, const std::string& type) const;
 
 };

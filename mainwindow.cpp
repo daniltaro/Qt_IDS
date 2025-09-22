@@ -17,7 +17,6 @@
 
 char ebuf[PCAP_ERRBUF_SIZE];
 std::string selected_dev;
-std::string json_file_name;
 bool all = false;
 bool tcp = false;
 bool udp = false;

@@ -22,7 +22,6 @@ struct PacketData{
     QString type;
     QString srcDst;
     QString hex;
-    bool threat = false;
 };
 
 class BaseHandler : public QObject{
@@ -31,7 +30,7 @@ protected:
     int pack_count = 0;
     PacketData packData;
 public:
-    virtual void Handle(u_char *user, const struct pcap_pkthdr
+    virtual void Handle( const struct pcap_pkthdr
             *header, const u_char *packet) = 0;
     virtual void printStatistic() = 0;
     virtual void saveGenStatistic() = 0;
@@ -42,11 +41,6 @@ signals:
     void packetCaptured(const PacketData&);
 
     void statReady(const QString&);
-};
-
-struct UserData{
-    BaseHandler* handler;
-    std::string save_buf;
 };
 
 #endif//BASEHANDLER_H

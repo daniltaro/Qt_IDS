@@ -58,10 +58,8 @@ QString EthernetHandler::getPayload(const u_char *payload, const uint32_t &len) 
     return hex;
 }
 
-void EthernetHandler::Handle(u_char *user, const struct pcap_pkthdr *header,
+void EthernetHandler::Handle(const struct pcap_pkthdr *header,
                              const u_char *packet) {
-    auto *data = reinterpret_cast<UserData *>(user);
-
     auto *ethernetHeader = (EthernetHeader *) packet;
     if (ethernetHeader->type() != ETHERTYPE_IPV4) return;
 
@@ -91,11 +89,10 @@ void EthernetHandler::Handle(u_char *user, const struct pcap_pkthdr *header,
 
         if(threatDec.isSuspiciousICMP(type) == true){
             packData.type = QString::fromStdString(type);
-            packData.threat = true;
-            this->saveStatistic(user, header, packet, true, type);
+            this->saveStatistic( header, packet, true, type);
         } else {
             packData.type = "-";
-            this->saveStatistic(user, header, packet, false, type);
+            this->saveStatistic( header, packet, false, type);
         }
 
     } if((tcp_prot || all_packets) && ipv4Header->protocolType() == 6){
@@ -113,11 +110,10 @@ void EthernetHandler::Handle(u_char *user, const struct pcap_pkthdr *header,
 
         if(threatDec.isSuspiciousTCP(type) == true){
             packData.type = QString::fromStdString(type);
-            packData.threat = true;
-            this->saveStatistic(user, header, packet, true, type);
+            this->saveStatistic(header, packet, true, type);
         } else {
             packData.type = "-";
-            this->saveStatistic(user, header, packet, false, type);
+            this->saveStatistic( header, packet, false, type);
         }
 
     } if((udp_prot || all_packets) && ipv4Header->protocolType() == 17){
@@ -133,11 +129,10 @@ void EthernetHandler::Handle(u_char *user, const struct pcap_pkthdr *header,
 
         if(threatDec.issuspiciousUDP(type) == true){
             packData.type = QString::fromStdString(type);
-            packData.threat = true;
-            this->saveStatistic(user, header, packet, true, type);
+            this->saveStatistic( header, packet, true, type);
         } else {
             packData.type = "-";
-            this->saveStatistic(user, header, packet, false, type);
+            this->saveStatistic( header, packet, false, type);
         }
 
     }
@@ -293,11 +288,8 @@ void EthernetHandler::saveGenStatistic() {
     save_buf += "}\n";
 }
 
-void EthernetHandler::saveStatistic(u_char *user, const struct pcap_pkthdr *header,
+void EthernetHandler::saveStatistic(const struct pcap_pkthdr *header,
                                     const u_char *packet, bool flag, const std::string& type) const{
-
-    auto *data = reinterpret_cast<UserData *>(user);
-
     json j;
     auto now = std::chrono::system_clock::now();
     auto time_point = std::chrono::system_clock::to_time_t(now);

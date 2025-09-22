@@ -3,11 +3,10 @@
 // #include "loopbackhandler.h"
 
 extern char ebuf[PCAP_ERRBUF_SIZE];
-std::string save_buf;
+extern std::string save_buf;
 
-PacketWorker::PacketWorker(const std::string& dev, bool tcp, bool icmp, bool udp, bool all,
-                           const std::string& json_file_name)
-    :   dev(dev), tcp(tcp), icmp(icmp), udp(udp), all(all), jsonPath(json_file_name){}
+PacketWorker::PacketWorker(const std::string& dev, bool tcp, bool icmp, bool udp, bool all)
+    :   dev(dev), tcp(tcp), icmp(icmp), udp(udp), all(all){}
 
 PacketWorker::~PacketWorker(){
     if(handle) pcap_close(handle);
@@ -36,18 +35,16 @@ void PacketWorker::startCapture(){
 
     save_buf += "[\n";
 
-    data = {handler ,save_buf};
-
-    pcap_loop(handle, -1, BaseHandler::StaticHandle, reinterpret_cast<u_char*>(&data));
+    pcap_loop(handle, -1, BaseHandler::StaticHandle, reinterpret_cast<u_char*>(handler));
 
     handler->printStatistic();
     save_buf += "\n]";
-
-    delete handler;
 
     emit finished();
 }
 
 void PacketWorker::stopCapture(){
-    if(handle) pcap_breakloop(handle);
+    if(handle){
+        pcap_breakloop(handle);
+    }
 }

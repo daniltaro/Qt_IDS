@@ -11,12 +11,11 @@
 #include <QFileDialog>
 
 extern std::string selected_dev;
-extern std::string json_file_name;
-extern std::string save_buf;
 extern bool all;
 extern bool tcp;
 extern bool udp;
 extern bool icmp;
+std::string save_buf;
 
 SecondMainWindow::SecondMainWindow(QWidget *parent)
     : QDialog(parent)
@@ -25,7 +24,7 @@ SecondMainWindow::SecondMainWindow(QWidget *parent)
     ui->setupUi(this);
     ui->label->setText("Running " + QString::fromStdString(selected_dev));
 
-    worker = new PacketWorker(selected_dev, tcp, icmp, udp, all, json_file_name);
+    worker = new PacketWorker(selected_dev, tcp, icmp, udp, all);
     thread = new QThread(this);
 
     worker->moveToThread(thread);
@@ -137,7 +136,7 @@ void SecondMainWindow::on_pushButton_2_clicked()
     save_buf = "";
 
     thread = new QThread(this);
-    worker = new PacketWorker(selected_dev, tcp, icmp, udp, all, json_file_name);
+    worker = new PacketWorker(selected_dev, tcp, icmp, udp, all);
     worker->moveToThread(thread);
 
     connect(thread, &QThread::started, worker, &PacketWorker::startCapture);
@@ -166,7 +165,7 @@ void SecondMainWindow::on_pushButton_2_clicked()
 void SecondMainWindow::on_pushButton_4_clicked()
 {
     QString curPath = QDir::currentPath() + "/data.json";
-    json_file_name = QFileDialog::getSaveFileName(this, tr("Select json file"),
+    std::string json_file_name = QFileDialog::getSaveFileName(this, tr("Select json file"),
     curPath, tr("JSON Files (*.json);;All Files (*)")).toStdString();
 
 
@@ -229,6 +228,7 @@ void SecondMainWindow::on_lineEdit_textChanged(const QString &arg1)
 
 void SecondMainWindow::on_radioButton_clicked(bool checked)
 {
+    ui->lineEdit->setText("");
     if(!checked){
         ui->lineEdit->setEnabled(true);
         for(int i = 0; i < ui->tableWidget->rowCount(); ++i){
@@ -250,4 +250,5 @@ void SecondMainWindow::on_radioButton_clicked(bool checked)
         ui->tableWidget->setRowHidden(i, !match);
     }
 }
+
 

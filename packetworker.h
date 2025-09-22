@@ -1,16 +1,15 @@
 #ifndef PACKETWORKER_H
 #define PACKETWORKER_H
 
-#include <pcap.h>
 #include "basehandler.h"
+
+#include <pcap.h>
 
 class PacketWorker : public QObject
 {
     Q_OBJECT
 public:
-    PacketWorker(const std::string& dev, bool tcp, bool icmp, bool udp, bool all,
-                 const std::string& json_file_name);
-
+    PacketWorker(const std::string& dev, bool tcp, bool icmp, bool udp, bool all);
     ~PacketWorker();
 
 public slots:
@@ -29,12 +28,11 @@ signals:
 
 private:
     pcap_t* handle = nullptr;
-    UserData data{};
+    pcap_dumper_t* dumper = nullptr;
     std::string dev;
     bool all, tcp, udp, icmp;
     std::string jsonPath;
     PacketData packData;
-
 
 };
 

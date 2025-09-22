@@ -54,7 +54,6 @@ void LoopBackHandler::printPayload(const u_char *payload, const uint32_t &len) c
 void LoopBackHandler::Handle(u_char *user, const struct pcap_pkthdr *header,
                              const u_char *packet) {
     pack_count++;
-    auto *data = reinterpret_cast<UserData *>(user);
 
     auto *ipv4Header = (Ipv4Header *) (packet + LINK_OFFSET);
 
@@ -279,10 +278,8 @@ void LoopBackHandler::saveGenStatistic() {
     save_buf += "}\n";
 }
 
-void LoopBackHandler::saveStatistic(u_char *user, const struct pcap_pkthdr *header,
+void LoopBackHandler::saveStatistic(const struct pcap_pkthdr *header,
                                     const u_char *packet, bool flag, const std::string& type) const{
-
-    auto *data = reinterpret_cast<UserData *>(user);
 
     json j;
     auto now = std::chrono::system_clock::now();
