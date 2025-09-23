@@ -31,7 +31,7 @@ qt_add_executable(my_IDS
         threatdetector.h threatdetector.cpp
         basehandler.h basehandler.cpp
         ethernethandler.h ethernethandler.cpp
-        # loopbackhandler.h loopbackhandler.cpp
+        loopbackhandler.h loopbackhandler.cpp
         ethernetheader.h ethernetheader.cpp
         icmpheader.h icmpheader.cpp
         ipv4header.h ipv4header.cpp

@@ -9,6 +9,7 @@
 #include <iostream>
 #include <QString>
 #include <QObject>
+#include "threatdetector.h"
 
 enum protocolType {
     ALL = 0,
@@ -28,15 +29,42 @@ class BaseHandler : public QObject{
     Q_OBJECT
 protected:
     int pack_count = 0;
+
     PacketData packData;
+
+    threatDetector threatDec;
+
+    bool all_packets;
+    bool tcp_prot;
+    bool udp_prot;
+    bool icmp_prot;
+
+    mutable bool commaFlag = false;
+
+    std::map<protocolType, int> protocolCounter;
+    std::map<std::string, int> ipv4Counter;
+
 public:
+    explicit BaseHandler(bool all,  bool tcp,
+                bool udp,  bool icmp);
+
+    QString getPayload(const u_char *payload, const uint32_t &len) const;
+
     virtual void Handle( const struct pcap_pkthdr
             *header, const u_char *packet) = 0;
-    virtual void printStatistic() = 0;
-    virtual void saveGenStatistic() = 0;
+
+    void printStatistic();
+
+    void saveGenStatistic();
+
+    virtual void saveStatistic(const struct pcap_pkthdr *header, const u_char *packet,
+                               bool flag, const std::string& type) const = 0;
+
     virtual ~BaseHandler() {}
+
     static void StaticHandle(u_char *user,
         const struct pcap_pkthdr *header, const u_char *packet);
+
 signals:
     void packetCaptured(const PacketData&);
 

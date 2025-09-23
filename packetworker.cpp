@@ -1,6 +1,6 @@
 #include "packetworker.h"
 #include "ethernethandler.h"
-// #include "loopbackhandler.h"
+#include "loopbackhandler.h"
 
 extern char ebuf[PCAP_ERRBUF_SIZE];
 extern std::string save_buf;
@@ -23,7 +23,7 @@ void PacketWorker::startCapture(){
     BaseHandler* handler = nullptr;
 
     if (link_type == DLT_EN10MB) handler = new EthernetHandler(all, tcp, udp, icmp);
-    // else if (link_type == DLT_NULL || link_type == DLT_LOOP) handler = new LoopBackHandler(all, tcp, udp, icmp);
+    else if (link_type == DLT_NULL || link_type == DLT_LOOP) handler = new LoopBackHandler(all, tcp, udp, icmp);
     else{
         qDebug("linkTypeError");
         emit linkTypeError();
