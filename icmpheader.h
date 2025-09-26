@@ -9,7 +9,6 @@ class ICMPHeader {
     uint16_t checksum;
 
 public:
-    void printICMPHeader() const;
     u_char getType() const;
     u_char getCode() const;
 };

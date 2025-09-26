@@ -24,12 +24,14 @@ class threatDetector{
     std::chrono::steady_clock::time_point start_timeUDP = std::chrono::steady_clock::now();
 
 public:
+    //checks ICMP packets for suspicious
     bool isSuspiciousICMP(std::string& type);
 
     void icmpTypeAdd();
 
     int getThreatCount() const;
 
+    //checks TCP packets for suspicious
     bool isSuspiciousTCP(std::string& type);
 
     void tcpSYNAdd();
@@ -38,6 +40,7 @@ public:
 
     void udpAdd();
 
+    //checks UDP packets for suspicious
     bool issuspiciousUDP(std::string& type);
 
     void addIPv4srcDstTCP(const std::string& ip, const u_int16_t& dst_ports);

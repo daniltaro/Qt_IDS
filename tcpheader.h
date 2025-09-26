@@ -15,8 +15,6 @@ class TCPHeader {
     uint16_t urgentPointer;
 
 public:
-    void printTCPHeader() const;
-
     u_char dataOffsetReservedGet() const;
 
     uint16_t getSrcPort() const;

@@ -50,18 +50,20 @@ public:
 
     QString getPayload(const u_char *payload, const uint32_t &len) const;
 
+    //main func where packets are captured
     virtual void Handle( const struct pcap_pkthdr
             *header, const u_char *packet) = 0;
 
+    // emitting main statistic for textEdit
     void printStatistic();
 
-    void saveGenStatistic();
-
-    virtual void saveStatistic(const struct pcap_pkthdr *header, const u_char *packet,
+    //getting buffer ready for save
+    virtual void saveJsonStatistic(const struct pcap_pkthdr *header, const u_char *packet,
                                bool flag, const std::string& type) const = 0;
 
     virtual ~BaseHandler() {}
 
+    //calls a Handle
     static void StaticHandle(u_char *user,
         const struct pcap_pkthdr *header, const u_char *packet);
 

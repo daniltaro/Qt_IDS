@@ -25,7 +25,7 @@ void PacketWorker::startCapture(){
     if (link_type == DLT_EN10MB) handler = new EthernetHandler(all, tcp, udp, icmp);
     else if (link_type == DLT_NULL || link_type == DLT_LOOP) handler = new LoopBackHandler(all, tcp, udp, icmp);
     else{
-        qDebug("linkTypeError");
+        qDebug("unssuported link type");
         emit linkTypeError();
         return;
     }

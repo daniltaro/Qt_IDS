@@ -9,9 +9,11 @@ class EthernetHandler : public BaseHandler {
 public:
     using BaseHandler::BaseHandler;
 
+    //main func where packets are captured
     void Handle( const struct pcap_pkthdr *header, const u_char *packet);
 
-    void saveStatistic(const struct pcap_pkthdr *header,
+    //getting buffer ready for save
+    void saveJsonStatistic(const struct pcap_pkthdr *header,
                        const u_char *packet, bool flag, const std::string& type) const;
 };
 

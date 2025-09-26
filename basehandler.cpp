@@ -71,29 +71,3 @@ void BaseHandler::printStatistic() {
 
     emit statReady(stat);
 }
-
-void BaseHandler::saveGenStatistic() {
-
-    save_buf += "{\n";
-    save_buf += "  \"TCP\": " + std::to_string(protocolCounter[TCP]) + ",\n";
-    save_buf += "  \"UDP\": " + std::to_string(protocolCounter[UDP]) + ",\n";
-    save_buf += "  \"ICMP\": " + std::to_string(protocolCounter[ICMP]) + ",\n";
-    save_buf += "   \"IP_Stats\": {\n";
-
-    bool first = true;
-    for (const auto &entry: ipv4Counter) {
-        if (!first) {
-            save_buf +=",\n";
-        }
-        save_buf += "    \"" + entry.first + "\": " + std::to_string(entry.second);
-        first = false;
-    }
-    save_buf += "\n  },\n";
-    save_buf +="  \"timestamp\": \"";
-    auto now = std::chrono::system_clock::now();
-    auto time_point = std::chrono::system_clock::to_time_t(now);
-    std::string time_str = std::ctime(&time_point);
-    time_str.pop_back();
-    save_buf += time_str +"\"\n";
-    save_buf += "}\n";
-}

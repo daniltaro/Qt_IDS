@@ -45,10 +45,10 @@ void LoopBackHandler::Handle(const struct pcap_pkthdr *header,
 
         if(threatDec.isSuspiciousICMP(type) == true){
             packData.type = QString::fromStdString(type);
-            this->saveStatistic(header, packet, true, type);
+            this->saveJsonStatistic(header, packet, true, type);
         } else {
             packData.type = "-";
-            this->saveStatistic(header, packet, false, type);
+            this->saveJsonStatistic(header, packet, false, type);
         }
 
     } if((tcp_prot || all_packets) && ipv4Header->protocolType() == 6){
@@ -66,10 +66,10 @@ void LoopBackHandler::Handle(const struct pcap_pkthdr *header,
 
         if(threatDec.isSuspiciousTCP(type) == true){
             packData.type = QString::fromStdString(type);
-            this->saveStatistic(header, packet, true, type);
+            this->saveJsonStatistic(header, packet, true, type);
         } else {
             packData.type = "-";
-            this->saveStatistic(header, packet, false, type);
+            this->saveJsonStatistic(header, packet, false, type);
         }
 
     } if((udp_prot || all_packets) && ipv4Header->protocolType() == 17){
@@ -85,10 +85,10 @@ void LoopBackHandler::Handle(const struct pcap_pkthdr *header,
 
         if(threatDec.issuspiciousUDP(type) == true){
             packData.type = QString::fromStdString(type);
-            this->saveStatistic(header, packet, true, type);
+            this->saveJsonStatistic(header, packet, true, type);
         } else {
             packData.type = "-";
-            this->saveStatistic(header, packet, false, type);
+            this->saveJsonStatistic(header, packet, false, type);
         }
 
     }
@@ -96,68 +96,35 @@ void LoopBackHandler::Handle(const struct pcap_pkthdr *header,
     if(show_packet == false) return;
     pack_count++;
 
-    std::cout << "packet len - " << std::dec << header->caplen << "\n\n";
-    std::cout << "IPV4 HEADER:"<< '\n';
-    ipv4Header->printIPv4Header();
-
     //parse and output
     if (ipv4Header->protocolType() == 6) {
         packData.protocol = "TCP";
 
-        std::cout << '\n';
         auto *tcpHeader = (TCPHeader *) (packet + LINK_OFFSET + ipHeaderLength);
-        std::cout << "TCP HEADER:"<< '\n';
-        tcpHeader->printTCPHeader();
         const uint8_t dataOffset = (tcpHeader->dataOffsetReservedGet() >> 4) * 4;
 
-        std::cout << '\n';
         const uint32_t payloadLength = header->caplen - (LINK_OFFSET + ipHeaderLength + dataOffset);
-        if (payloadLength > 0) {
-            std::cout << "payload length - " << static_cast<int>(payloadLength)
-            << " bytes" << std::endl;
-            std::cout << "PAYLOAD:"<< '\n';
-        } else {
-            std::cout << "no payload" << std::endl;
-            std::cout << "\n[ " <<  threatDec.getThreatCount()
-                      << " THREAT FOUND ]" << "\n";
-            return;
-        }
-
         const u_char *payload = packet + LINK_OFFSET + ipHeaderLength + dataOffset;
-        packData.hex = getPayload(payload, payloadLength);
+        if (payloadLength > 0){
+            packData.hex = getPayload(payload, payloadLength);
+        }
+        else packData.hex = "no payload";
         emit packetCaptured(packData);
     } else if (ipv4Header->protocolType() == 17) {
         packData.protocol = "UDP";
 
-        std::cout << '\n';
-        auto *udpHeader = (UDPHeader *) (packet + LINK_OFFSET + ipHeaderLength);
-        std::cout << "UDP HEADER:"<< '\n';
-        udpHeader->printUDPHeader();
 
-        std::cout << '\n';
         const uint32_t payloadLength = header->caplen - (LINK_OFFSET + ipHeaderLength + 8);
-        if (payloadLength > 0) {
-            std::cout << "payload length - " << static_cast<int>(payloadLength)
-            << " bytes" << std::endl;
-            std::cout << "PAYLOAD:"<< '\n';
-        } else {
-            std::cout << "no payload" << std::endl;
-            std::cout << "\n[ " << threatDec.getThreatCount()
-                      << " THREAT FOUND ]" << "\n";
-            return;
-        }
-
         const u_char *payload = packet + LINK_OFFSET + ipHeaderLength + 8;
-        packData.hex = getPayload(payload, payloadLength);
+        if (payloadLength > 0){
+            packData.hex = getPayload(payload, payloadLength);
+        }
+        else packData.hex = "no payload";
         emit packetCaptured(packData);
     } else if (ipv4Header->protocolType() == 1) {
         packData.protocol = "ICMP";
 
-        std::cout << '\n';
         auto *icmpHeader = (ICMPHeader *) (packet + LINK_OFFSET + ipHeaderLength);
-
-        std::cout << "ICMP HEADER:"<< '\n';
-        icmpHeader->printICMPHeader();
 
         if(icmpHeader->getType() == 8){
             threatDec.icmpTypeAdd();
@@ -180,30 +147,18 @@ void LoopBackHandler::Handle(const struct pcap_pkthdr *header,
             }
         }
 
-        std::cout << '\n';
         const uint32_t payloadLength = header->caplen - (LINK_OFFSET + ipHeaderLength + icmpLen);
-        if (payloadLength > 0) {
-            std::cout << "payload length - " << static_cast<int>(payloadLength)
-            << " bytes" << std::endl;
-            std::cout << "PAYLOAD:"<< '\n';
-        } else {
-            packData.hex = "no payload";
-            std::cout << "no payload" << std::endl;
-            std::cout << "\n[ " << threatDec.getThreatCount()
-                      << " THREAT FOUND ]" << "\n";
-            return;
-        }
-
         const u_char *payload = packet + LINK_OFFSET + ipHeaderLength + icmpLen;
-        packData.hex = getPayload(payload, payloadLength);
+        if (payloadLength > 0){
+            packData.hex = getPayload(payload, payloadLength);
+        }
+        else packData.hex = "no payload";
         emit packetCaptured(packData);
     }
-    std::cout << "\n[ " << threatDec.getThreatCount()
-              << " THREAT FOUND ]" << "\n";
 }
 
 
-void LoopBackHandler::saveStatistic(const struct pcap_pkthdr *header,
+void LoopBackHandler::saveJsonStatistic(const struct pcap_pkthdr *header,
                                 const u_char *packet, bool flag, const std::string& type) const{
     json j;
     auto now = std::chrono::system_clock::now();

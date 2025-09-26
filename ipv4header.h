@@ -17,8 +17,6 @@ class Ipv4Header {
     u_char dstIP[4];
 
 public:
-    void printIPv4Header() const;
-
     u_char protocolType() const;
 
     u_char versionIHLGet() const;

@@ -2,7 +2,6 @@
 #define PACKETWORKER_H
 
 #include "basehandler.h"
-
 #include <pcap.h>
 
 class PacketWorker : public QObject
@@ -28,7 +27,6 @@ signals:
 
 private:
     pcap_t* handle = nullptr;
-    pcap_dumper_t* dumper = nullptr;
     std::string dev;
     bool all, tcp, udp, icmp;
     std::string jsonPath;

@@ -10,7 +10,6 @@ class UDPHeader {
     uint16_t checksum = 0;
 
 public:
-    void printUDPHeader() const;
     uint16_t getSrcPort() const;
     uint16_t getDstPort() const;
 };

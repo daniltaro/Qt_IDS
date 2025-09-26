@@ -1,5 +1,5 @@
 #include "threatdetector.h"
-#include <iostream>
+#include <QDebug>
 
 bool threatDetector::isSuspiciousICMP(std::string& type){
     auto now = std::chrono::steady_clock::now();
@@ -12,7 +12,7 @@ bool threatDetector::isSuspiciousICMP(std::string& type){
             flag = true;
 
             type += "[ICMP FLOOD] ";
-            std::cout << "[ICMP FLOOD] " << "detected\n";
+            qDebug() << "[ICMP FLOOD] " << "detected";
         } else {
             start_timeICMP = now;
             icmp_count = 0;
@@ -35,7 +35,7 @@ bool threatDetector::isSuspiciousTCP(std::string& type){
             threatCount++;
 
             type += "[SYN FLOOD] ";
-            std::cout << "[SYN FLOOD] " << "detected\n";
+            qDebug() << "[SYN FLOOD] " << "detected";
         } else {
             start_timeTCP = now;
             tcpACK = 0;
@@ -48,7 +48,7 @@ bool threatDetector::isSuspiciousTCP(std::string& type){
                 threatCount++;
 
                 type += "[TCP PORT SCANING] ";
-                std::cout << "[TCP PORT SCANING] " << "detected\n";
+                qDebug() << "[TCP PORT SCANING] " << "detected";
             }
         }
     }
@@ -68,7 +68,7 @@ bool threatDetector::issuspiciousUDP(std::string& type){
             threatCount++;
 
             type += "[UDP FLOOD] ";
-            std::cout << "[UDP FLOOD] " << "detected\n";
+            qDebug() << "[UDP FLOOD] " << "detected";
         } else {
             UDP_packets = 0;
             start_timeUDP = now;
@@ -80,7 +80,7 @@ bool threatDetector::issuspiciousUDP(std::string& type){
                 threatCount++;
 
                 type += "[UDP PORT SCANING] ";
-                std::cout << "[UDP PORT SCANING] " << "detected\n";
+                qDebug() << "[UDP PORT SCANING] " << "detected";
             }
         }
 
