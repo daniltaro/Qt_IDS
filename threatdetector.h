@@ -4,12 +4,15 @@
 #include <chrono>
 #include <pcap.h>
 #include <map>
+#include <string>
 #include <set>
 
 class threatDetector{
+
+    int threatCount = 0;
+
     //ICMP
     int icmp_count = 0;
-    int threatCount = 0;
     std::chrono::steady_clock::time_point start_timeICMP = std::chrono::steady_clock::now();
 
     //TCP

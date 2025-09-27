@@ -12,11 +12,12 @@ bool threatDetector::isSuspiciousICMP(std::string& type){
             flag = true;
 
             type += "[ICMP FLOOD] ";
-            qDebug() << "[ICMP FLOOD] " << "detected";
+            qDebug() << "[ICMP FLOOD] detected";
         } else {
             start_timeICMP = now;
             icmp_count = 0;
         }
+        qDebug() << "isSuspiciousICMP 5 seconds have passed";
     }
     return flag;
 }
@@ -35,7 +36,7 @@ bool threatDetector::isSuspiciousTCP(std::string& type){
             threatCount++;
 
             type += "[SYN FLOOD] ";
-            qDebug() << "[SYN FLOOD] " << "detected";
+            qDebug() << "[SYN FLOOD] detected";
         } else {
             start_timeTCP = now;
             tcpACK = 0;
@@ -43,14 +44,15 @@ bool threatDetector::isSuspiciousTCP(std::string& type){
         }
 
         for(const auto& [ip, ports] : TCPscanner){
-            if(ports.size() > 5){
+            if(ports.size() > 8){
                 flag = true;
                 threatCount++;
 
                 type += "[TCP PORT SCANING] ";
-                qDebug() << "[TCP PORT SCANING] " << "detected";
+                qDebug() << "[TCP PORT SCANING] detected";
             }
         }
+        qDebug() << "isSuspiciousTCP 5 seconds have passed";
     }
     return flag;
 }
@@ -68,14 +70,14 @@ bool threatDetector::issuspiciousUDP(std::string& type){
             threatCount++;
 
             type += "[UDP FLOOD] ";
-            qDebug() << "[UDP FLOOD] " << "detected";
+            qDebug() << "[UDP FLOOD] detected";
         } else {
             UDP_packets = 0;
             start_timeUDP = now;
         }
 
         for(const auto& [ip, ports] : UDPscanner){
-            if(ports.size() > 5){
+            if(ports.size() > 8){
                 flag = true;
                 threatCount++;
 
@@ -83,8 +85,7 @@ bool threatDetector::issuspiciousUDP(std::string& type){
                 qDebug() << "[UDP PORT SCANING] " << "detected";
             }
         }
-
-
+        qDebug() << "isSuspiciousUDP 5 seconds have passed";
     }
     return flag;
 }
