@@ -38,6 +38,7 @@ qt_add_executable(my_IDS
         tcpheader.h tcpheader.cpp
         udpheader.h udpheader.cpp
         packetworker.h packetworker.cpp
+        anim.h
     )
 
 

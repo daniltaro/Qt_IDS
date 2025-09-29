@@ -1,6 +1,7 @@
 #include "secondmainwindow.h"
 #include "ui_secondmainwindow.h"
 #include "packetworker.h"
+#include "anim.h"
 
 #include <QLabel>
 #include <QLineEdit>
@@ -28,6 +29,14 @@ SecondMainWindow::SecondMainWindow(QWidget *parent)
     thread = new QThread(this);
 
     worker->moveToThread(thread);
+
+    QObject::connect(ui->pushButton, &QPushButton::pressed, [&](){anim::animateButton(ui->pushButton);});
+    QObject::connect(ui->pushButton_2, &QPushButton::pressed, [&](){anim::animateButton(ui->pushButton_2);});
+    QObject::connect(ui->pushButton_3, &QPushButton::pressed, [&](){anim::animateButton(ui->pushButton_3);});
+    QObject::connect(ui->pushButton_4, &QPushButton::pressed, [&](){anim::animateButton(ui->pushButton_4);});
+    QObject::connect(ui->radioButton, &QRadioButton::pressed, [&](){
+        anim::animateRadioButton(ui->radioButton);
+    });
 
     connect(thread, &QThread::started, worker, &PacketWorker::startCapture);
     connect(thread, &QThread::finished, thread, &QThread::deleteLater);

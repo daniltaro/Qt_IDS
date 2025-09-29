@@ -2,11 +2,14 @@
 #include <QFileDialog>
 #include <QMessageBox>
 #include <QListWidget>
+#include <QPropertyAnimation>
+#include <QGraphicsDropShadowEffect>
 
 #include "basehandler.h"
 #include "ethernethandler.h"
 #include "loopbackhandler.h"
 #include "mainwindow.h"
+#include "anim.h"
 #include "./ui_mainwindow.h"
 
 #include <fstream>
@@ -28,13 +31,27 @@ MainWindow::MainWindow(QWidget *parent)
 {
     ui->setupUi(this);
 
+    QObject::connect(ui->pushButton, &QPushButton::pressed, [&](){anim::animateButton(ui->pushButton);});
+    QObject::connect(ui->checkBox_ICMP, &QCheckBox::pressed, [&](){
+        anim::animateCheckBox(ui->checkBox_ICMP);
+    });
+    QObject::connect(ui->checkBox_UDP, &QCheckBox::pressed, [&](){
+        anim::animateCheckBox(ui->checkBox_UDP);
+    });
+    QObject::connect(ui->checkBox_TCP, &QCheckBox::pressed, [&](){
+        anim::animateCheckBox(ui->checkBox_TCP);
+    });
+    QObject::connect(ui->radioButton_ALL, &QRadioButton::pressed, [&](){
+        anim::animateRadioButton(ui->radioButton_ALL);
+    });
+
+    //devs output
     pcap_if_t *devs;
 
     if (pcap_findalldevs(&devs, ebuf) == -1) {
         throw std::runtime_error("pcap_findalldevs");
     }
 
-    //writes all devs
     pcap_if_t *temp = devs;
 
     while (temp != nullptr) {
@@ -137,6 +154,8 @@ void MainWindow::on_listWidget_itemDoubleClicked(QListWidgetItem *item)
     sec = new SecondMainWindow(this);
     sec->show();
 }
+
+
 
 
 
