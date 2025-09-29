@@ -9,7 +9,7 @@
 #include <iostream>
 #include <QString>
 #include <QObject>
-#include "threatdetector.h"
+#include "../threatDetector/threatdetector.h"
 
 enum protocolType {
     ALL = 0,

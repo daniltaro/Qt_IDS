@@ -10,6 +10,11 @@
     <height>672</height>
    </rect>
   </property>
+  <property name="font">
+   <font>
+    <family>American Typewriter</family>
+   </font>
+  </property>
   <property name="windowTitle">
    <string>MainWindow</string>
   </property>

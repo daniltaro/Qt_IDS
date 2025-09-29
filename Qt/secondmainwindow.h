@@ -1,7 +1,7 @@
 #ifndef SECONDMAINWINDOW_H
 #define SECONDMAINWINDOW_H
 
-#include "packetworker.h"
+#include "../packetHandlers/packetworker.h"
 
 #include <QDialog>
 #include <QVector>

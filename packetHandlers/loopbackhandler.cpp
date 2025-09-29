@@ -1,37 +1,34 @@
 #include <iostream>
-#include <string>
-#include <QDebug>
+#include <fstream>
+#include <chrono>
 #include <nlohmann/json.hpp>
-#include <QString>
+#include <thread>
+#include <QDebug>
 
-#include "ethernethandler.h"
-#include "ethernetheader.h"
-#include "ipv4header.h"
-#include "tcpheader.h"
-#include "udpheader.h"
-#include "icmpheader.h"
+#include "loopbackhandler.h"
+#include "../headers/ipv4header.h"
+#include "../headers/tcpheader.h"
+#include "../headers/udpheader.h"
+#include "../headers/icmpheader.h"
 
-#define ETHERTYPE_IPV4 0x0800
-#define LINK_OFFSET 14
+#define LINK_OFFSET 4
 
-extern std::string save_buf;
 using json = nlohmann::json;
+extern std::string save_buf;
 
-void EthernetHandler::Handle(const struct pcap_pkthdr *header,
+void LoopBackHandler::Handle(const struct pcap_pkthdr *header,
                              const u_char *packet) {
-    auto *ethernetHeader = (EthernetHeader *) packet;
-    if (ethernetHeader->type() != ETHERTYPE_IPV4) return;
 
     auto *ipv4Header = (Ipv4Header *) (packet + LINK_OFFSET);
+
+    packData.srcDst = QString::fromStdString
+        (ipv4Header->getSrcIP() + " -> " + ipv4Header->getDstIP());
 
     const u_char ihl = ipv4Header->versionIHLGet() & 0x0F;
     const uint16_t ipHeaderLength = ihl * 4;
 
     std::string type = "";
     bool show_packet = false;
-
-    packData.srcDst = QString::fromStdString
-        (ipv4Header->getSrcIP() + " -> " + ipv4Header->getDstIP());
 
     //checking for suspicious
     if((icmp_prot || all_packets) && ipv4Header->protocolType() == 1){
@@ -48,10 +45,10 @@ void EthernetHandler::Handle(const struct pcap_pkthdr *header,
 
         if(threatDec.isSuspiciousICMP(type) == true){
             packData.type = QString::fromStdString(type);
-            this->saveJsonStatistic( header, packet, true, type);
+            this->saveJsonStatistic(header, packet, true, type);
         } else {
             packData.type = "-";
-            this->saveJsonStatistic( header, packet, false, type);
+            this->saveJsonStatistic(header, packet, false, type);
         }
 
     } if((tcp_prot || all_packets) && ipv4Header->protocolType() == 6){
@@ -72,7 +69,7 @@ void EthernetHandler::Handle(const struct pcap_pkthdr *header,
             this->saveJsonStatistic(header, packet, true, type);
         } else {
             packData.type = "-";
-            this->saveJsonStatistic( header, packet, false, type);
+            this->saveJsonStatistic(header, packet, false, type);
         }
 
     } if((udp_prot || all_packets) && ipv4Header->protocolType() == 17){
@@ -88,10 +85,10 @@ void EthernetHandler::Handle(const struct pcap_pkthdr *header,
 
         if(threatDec.issuspiciousUDP(type) == true){
             packData.type = QString::fromStdString(type);
-            this->saveJsonStatistic( header, packet, true, type);
+            this->saveJsonStatistic(header, packet, true, type);
         } else {
             packData.type = "-";
-            this->saveJsonStatistic( header, packet, false, type);
+            this->saveJsonStatistic(header, packet, false, type);
         }
 
     }
@@ -99,6 +96,7 @@ void EthernetHandler::Handle(const struct pcap_pkthdr *header,
     if(show_packet == false) return;
     pack_count++;
 
+    //parse and output
     if (ipv4Header->protocolType() == 6) {
         packData.protocol = "TCP";
 
@@ -114,6 +112,7 @@ void EthernetHandler::Handle(const struct pcap_pkthdr *header,
         emit packetCaptured(packData);
     } else if (ipv4Header->protocolType() == 17) {
         packData.protocol = "UDP";
+
 
         const uint32_t payloadLength = header->caplen - (LINK_OFFSET + ipHeaderLength + 8);
         const u_char *payload = packet + LINK_OFFSET + ipHeaderLength + 8;
@@ -158,7 +157,8 @@ void EthernetHandler::Handle(const struct pcap_pkthdr *header,
     }
 }
 
-void EthernetHandler::saveJsonStatistic(const struct pcap_pkthdr *header,
+
+void LoopBackHandler::saveJsonStatistic(const struct pcap_pkthdr *header,
                                 const u_char *packet, bool flag, const std::string& type) const{
     json j;
     auto now = std::chrono::system_clock::now();
@@ -199,5 +199,4 @@ void EthernetHandler::saveJsonStatistic(const struct pcap_pkthdr *header,
     std::lock_guard<std::mutex> lock_g(lock);
     save_buf += j.dump();
 }
-
 

@@ -1,6 +1,6 @@
 #include "secondmainwindow.h"
 #include "ui_secondmainwindow.h"
-#include "packetworker.h"
+#include "../packetHandlers/packetworker.h"
 #include "anim.h"
 
 #include <QLabel>

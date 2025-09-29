@@ -17,30 +17,39 @@ message(STATUS "PCAP_LIB - "${PCAP_LIB})
 
 set(PROJECT_SOURCES
         main.cpp
-        mainwindow.cpp
-        mainwindow.h
-        mainwindow.ui
-        secondmainwindow.h
-        secondmainwindow.cpp
-        secondmainwindow.ui
+        Qt/mainwindow.cpp
+        Qt/mainwindow.h
+        Qt/mainwindow.ui
+        Qt/secondmainwindow.h
+        Qt/secondmainwindow.cpp
+        Qt/secondmainwindow.ui
+        threatDetector/threatdetector.h 
+        threatDetector/threatdetector.cpp
+        packetHandlers/basehandler.h 
+        packetHandlers/basehandler.cpp
+        packetHandlers/ethernethandler.h
+        packetHandlers/ethernethandler.cpp
+        packetHandlers/loopbackhandler.h
+        packetHandlers/loopbackhandler.cpp
+        headers/ethernetheader.h 
+        headers/ethernetheader.cpp
+        headers/icmpheader.h 
+        headers/icmpheader.cpp
+        headers/ipv4header.h 
+        headers/ipv4header.cpp
+        headers/tcpheader.h 
+        headers/tcpheader.cpp
+        headers/udpheader.h 
+        headers/udpheader.cpp
+        packetHandlers/packetworker.h
+        packetHandlers/packetworker.cpp
+        Qt/anim.h
 )
 
 qt_add_executable(my_IDS
         MANUAL_FINALIZATION
         ${PROJECT_SOURCES}
-        threatdetector.h threatdetector.cpp
-        basehandler.h basehandler.cpp
-        ethernethandler.h ethernethandler.cpp
-        loopbackhandler.h loopbackhandler.cpp
-        ethernetheader.h ethernetheader.cpp
-        icmpheader.h icmpheader.cpp
-        ipv4header.h ipv4header.cpp
-        tcpheader.h tcpheader.cpp
-        udpheader.h udpheader.cpp
-        packetworker.h packetworker.cpp
-        anim.h
-    )
-
+)
 
 target_link_libraries(my_IDS PRIVATE
     Qt${QT_VERSION_MAJOR}::Widgets

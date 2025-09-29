@@ -5,9 +5,9 @@
 #include <QPropertyAnimation>
 #include <QGraphicsDropShadowEffect>
 
-#include "basehandler.h"
-#include "ethernethandler.h"
-#include "loopbackhandler.h"
+#include "../packetHandlers/basehandler.h"
+#include "../packetHandlers/ethernethandler.h"
+#include "../packetHandlers/loopbackhandler.h"
 #include "mainwindow.h"
 #include "anim.h"
 #include "./ui_mainwindow.h"

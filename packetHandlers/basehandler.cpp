@@ -1,8 +1,8 @@
 #include "basehandler.h"
-#include "tcpheader.h"
-#include "icmpheader.h"
-#include "udpheader.h"
-#include "ipv4header.h"
+#include "../headers/tcpheader.h"
+#include "../headers/icmpheader.h"
+#include "../headers/udpheader.h"
+#include "../headers/ipv4header.h"
 
 #include <thread>
 #include <fstream>
