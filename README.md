@@ -7,11 +7,11 @@
 [![Free](https://img.shields.io/badge/MIT-license-black)](https://github.com/daniltaro/Qt_IDS/blob/readme/LICENSE)
 
 ## Navigation
-- [About](#-about)
-- [Features](#-features)
-- [Usage](#-usage)
-- [How to build](#-how-to-build)
-- [Notes](#-notes)
+- [About](#about)
+- [Features](#features)
+- [Usage](#usage)
+- [How to build](#how-to-build)
+- [Notes](#notes)
 - [License](https://github.com/daniltaro/Qt_IDS/blob/readme/LICENSE)
 
 ## About
@@ -22,11 +22,11 @@ A security tool written in C++ that monitors network traffic and system activity
 
 ## Features
 
-- [Parses payloads](#-parsing-payload)
-- [Supports TCP, UDP, and ICMP protocols](#-protocols)
-- [Saves captured packets to JSON files](#-save-in-JSON)
-- [Displays captured packets](#-packets)
-- [Allows packet filtering](#-filters-packets)
+- [Parses payloads](#parsing-payload)
+- [Supports TCP, UDP, and ICMP protocols](#protocols)
+- [Saves captured packets to JSON files](#save-in-JSON)
+- [Displays captured packets](#packets)
+- [Allows packet filtering](#filters-packets)
 
 ## Usage
 
