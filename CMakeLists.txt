@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.16)
 
-project(my_IDS VERSION 0.1 LANGUAGES CXX)
+project(Qt_IDS VERSION 0.1 LANGUAGES CXX)
 
 set(CMAKE_AUTOUIC ON)
 set(CMAKE_AUTOMOC ON)
@@ -46,12 +46,12 @@ set(PROJECT_SOURCES
         Qt/anim.h
 )
 
-qt_add_executable(my_IDS
+qt_add_executable(Qt_IDS
         MANUAL_FINALIZATION
         ${PROJECT_SOURCES}
 )
 
-target_link_libraries(my_IDS PRIVATE
+target_link_libraries(Qt_IDS PRIVATE
     Qt${QT_VERSION_MAJOR}::Widgets
     Qt${QT_VERSION_MAJOR}::Core
     ${PCAP_LIB}
@@ -61,7 +61,7 @@ target_link_libraries(my_IDS PRIVATE
 if(${QT_VERSION} VERSION_LESS 6.1.0)
   set(BUNDLE_ID_OPTION MACOSX_BUNDLE_GUI_IDENTIFIER com.example.my_IDS)
 endif()
-set_target_properties(my_IDS PROPERTIES
+set_target_properties(Qt_IDS PROPERTIES
     ${BUNDLE_ID_OPTION}
     MACOSX_BUNDLE_BUNDLE_VERSION ${PROJECT_VERSION}
     MACOSX_BUNDLE_SHORT_VERSION_STRING ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}
@@ -70,12 +70,12 @@ set_target_properties(my_IDS PROPERTIES
 )
 
 include(GNUInstallDirs)
-install(TARGETS my_IDS
+install(TARGETS Qt_IDS
     BUNDLE DESTINATION .
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
 )
 
 if(QT_VERSION_MAJOR EQUAL 6)
-    qt_finalize_executable(my_IDS)
+    qt_finalize_executable(Qt_IDS)
 endif()
