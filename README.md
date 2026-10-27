@@ -4,7 +4,7 @@
 ![dependencies](https://img.shields.io/badge/dependencies-Qt6%2C_libpcap%2C_nlohmann%2Fjson%2C_CMake-blue)
 ![OS](https://img.shields.io/badge/OS-MacOS%2C%20Linux-blue)
 [![getting started](https://img.shields.io/badge/available-features-blue)](#-Features)
-[![Free](https://img.shields.io/badge/MIT-license-black)](https://github.com/daniltaro/Qt_IDS/blob/readme/LICENSE)
+[![Free](https://img.shields.io/badge/MIT-license-black)](LICENSE)
 
 ## Navigation
 - [About](#about)
@@ -12,11 +12,11 @@
 - [Usage](#usage)
 - [How to build](#how-to-build)
 - [Notes](#notes)
-- [License](https://github.com/daniltaro/Qt_IDS/blob/readme/LICENSE)
+- [License](LICENSE)
 
 ## About
 
-A security tool written in C++ that monitors network traffic and system activity for malicious behavior.  
+A security tool written in C++ that monitors IPv4 network traffic for floods and port scans.  
 >This is an improved UI version of my previous project ([sniffer-packet-analyzer](https://github.com/daniltaro/sniffer-packet-analyzer)),  
 >which I created for training and studying how networks work.
 
@@ -27,6 +27,7 @@ A security tool written in C++ that monitors network traffic and system activity
 - [Saves captured packets to JSON files](#save-in-JSON)
 - [Displays captured packets](#packets)
 - [Allows packet filtering](#filters-packets)
+- Detects ICMP / SYN / UDP floods and TCP / UDP port scans
 
 ## Usage
 
@@ -34,10 +35,14 @@ A security tool written in C++ that monitors network traffic and system activity
 2. Select the protocols and the network interface to scan.
 3. Press the **Start** button (or double-click the interface) to begin capturing packets.
 4. Click on a packet to view its payload.
-5. Press **Back** to return to the main window.
-6. Press **Save JSON** to export the data.
-7. Press **Stop** to end packet capturing.
-8. Filter captured packets by entering keywords.
+5. Press **Stop** to end packet capturing.
+6. Filter captured packets by entering keywords and/or **Show only threats**.
+7. Press **Save json** to export the data.
+8. Press **Back** to return to the main window.
+
+Capturing needs access to the network devices: run the program as root
+or, on macOS, give your user read access to `/dev/bpf*`
+(for example with the ChmodBPF script that ships with Wireshark).
 
 ## How to build
 
@@ -56,18 +61,31 @@ git clone https://github.com/daniltaro/Qt_IDS.git
 cd Qt_IDS
 ```
 
-2. Create a build directory and compile:
+2. Configure and build:
 
 ```bash
-mkdir build && cd build
-cmake ..
-# Use your preferred generator
+cmake -S . -B build
+cmake --build build
+```
+
+3. Run the tests (optional, disable them with `-DQT_IDS_BUILD_TESTS=OFF`):
+
+```bash
+ctest --test-dir build --output-on-failure
 ```
 
 ## Notes
 
 - Make sure `libpcap` and `nlohmann_json` are installed.
 - Only **Ethernet** and **Loopback** link types are supported.
+- Only IPv4 is analysed, IPv6 packets are skipped.
+- Threat detection works in 5-second windows per host:
+  - ICMP flood: more than 20 echo requests to one host;
+  - SYN flood: more than 20 SYNs to one host with less than 20% of them followed by ACKs;
+  - UDP flood: more than 5000 packets to one host;
+  - port scan: one source probing more than 100 ports of one host
+    (TCP counts only connection attempts, UDP ignores replies from well-known ports).
+- The packet table keeps the last 20000 packets; the JSON export contains all of them.
 
 ---
 
