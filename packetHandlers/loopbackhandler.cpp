@@ -39,11 +39,9 @@ void LoopBackHandler::Handle(const struct pcap_pkthdr *header,
 
         auto *icmpHeader = (ICMPHeader *) (packet + LINK_OFFSET + ipHeaderLength);
 
-        if(icmpHeader->getType() == 8){
-            threatDec.icmpTypeAdd();
-        }
-
-        if(threatDec.isSuspiciousICMP(type) == true){
+        type = threatDec.inspectICMP(ipv4Header->getDstIP(), icmpHeader->getType(),
+                                     threatDetector::toTimestamp(header->ts));
+        if(!type.empty()){
             packData.type = QString::fromStdString(type);
             this->saveJsonStatistic(header, packet, true, type);
         } else {
@@ -59,12 +57,10 @@ void LoopBackHandler::Handle(const struct pcap_pkthdr *header,
 
         auto *tcpHeader = (TCPHeader *) (packet + LINK_OFFSET + ipHeaderLength);
 
-        threatDec.addIPv4srcDstTCP(ipv4Header->getSrcIP(), tcpHeader->getDstPort());
-
-        if (tcpHeader->getFlag() & 0x02) threatDec.tcpSYNAdd();
-        else if(tcpHeader->getFlag() & 0x10) threatDec.tcpACKAdd();
-
-        if(threatDec.isSuspiciousTCP(type) == true){
+        type = threatDec.inspectTCP(ipv4Header->getSrcIP(), ipv4Header->getDstIP(),
+                                    tcpHeader->getDstPort(), tcpHeader->getFlag(),
+                                    threatDetector::toTimestamp(header->ts));
+        if(!type.empty()){
             packData.type = QString::fromStdString(type);
             this->saveJsonStatistic(header, packet, true, type);
         } else {
@@ -77,13 +73,13 @@ void LoopBackHandler::Handle(const struct pcap_pkthdr *header,
         protocolCounter[UDP] += 1;
         ipv4Counter[ipv4Header->getSrcIP()]++;
         ipv4Counter[ipv4Header->getDstIP()]++;
-        threatDec.udpAdd();
 
         auto *udpHeader = (UDPHeader *) (packet + LINK_OFFSET + ipHeaderLength);
 
-        threatDec.addIPv4srcDstUDP(ipv4Header->getSrcIP(), udpHeader->getDstPort());
-
-        if(threatDec.issuspiciousUDP(type) == true){
+        type = threatDec.inspectUDP(ipv4Header->getSrcIP(), ipv4Header->getDstIP(),
+                                    udpHeader->getSrcPort(), udpHeader->getDstPort(),
+                                    threatDetector::toTimestamp(header->ts));
+        if(!type.empty()){
             packData.type = QString::fromStdString(type);
             this->saveJsonStatistic(header, packet, true, type);
         } else {
@@ -125,10 +121,6 @@ void LoopBackHandler::Handle(const struct pcap_pkthdr *header,
         packData.protocol = "ICMP";
 
         auto *icmpHeader = (ICMPHeader *) (packet + LINK_OFFSET + ipHeaderLength);
-
-        if(icmpHeader->getType() == 8){
-            threatDec.icmpTypeAdd();
-        }
 
         int icmpLen = 8;
         if (icmpHeader->getType() == 5 || icmpHeader->getType() == 11) {
