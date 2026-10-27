@@ -5,9 +5,6 @@
 #include <QPropertyAnimation>
 #include <QGraphicsDropShadowEffect>
 
-#include "../packetHandlers/basehandler.h"
-#include "../packetHandlers/ethernethandler.h"
-#include "../packetHandlers/loopbackhandler.h"
 #include "mainwindow.h"
 #include "anim.h"
 #include "./ui_mainwindow.h"
@@ -18,12 +15,6 @@
 #include <string>
 #include <thread>
 
-char ebuf[PCAP_ERRBUF_SIZE];
-std::string selected_dev;
-bool all = false;
-bool tcp = false;
-bool udp = false;
-bool icmp = false;
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -46,6 +37,7 @@ MainWindow::MainWindow(QWidget *parent)
     });
 
     //devs output
+    char ebuf[PCAP_ERRBUF_SIZE] = {};
     pcap_if_t *devs;
 
     if (pcap_findalldevs(&devs, ebuf) == -1) {
@@ -69,25 +61,27 @@ MainWindow::~MainWindow()
 
 void MainWindow::on_pushButton_clicked()
 {
-    selected_dev = ui->listWidget->currentItem()->text().toStdString();
+    const std::string selected_dev = ui->listWidget->currentItem()->text().toStdString();
     if(!ui->listWidget->currentItem()->isSelected()){
         ui->statusbar->showMessage("Choose dev");
         return;
     }
 
-    if(!ui->radioButton_ALL->isChecked()){
-        if(ui->checkBox_TCP->checkState() == Qt::Checked) tcp = true;
-        if(ui->checkBox_UDP->checkState() == Qt::Checked) udp = true;
-        if(ui->checkBox_ICMP->checkState() == Qt::Checked) icmp = true;
-    }else all = true;
+    CaptureSettings settings;
+    settings.device = selected_dev;
+    settings.tcp = ui->checkBox_TCP->isChecked();
+    settings.udp = ui->checkBox_UDP->isChecked();
+    settings.icmp = ui->checkBox_ICMP->isChecked();
 
-    if(all == false && tcp == false && udp == false && icmp == false){
+    if(!settings.tcp && !settings.udp && !settings.icmp){
         ui->statusbar->showMessage("Choose protocol");
         return;
     }
 
+    auto *sec = new SecondMainWindow(settings, this);
+    connect(sec, &QDialog::finished, this, &QWidget::show);
+    connect(sec, &QDialog::finished, sec, &QObject::deleteLater);
     hide();
-    sec = new SecondMainWindow(this);
     sec->show();
 }
 
@@ -133,25 +127,27 @@ void MainWindow::on_checkBox_TCP_pressed()
 
 void MainWindow::on_listWidget_itemDoubleClicked(QListWidgetItem *item)
 {
-    selected_dev = item->text().toStdString();
+    const std::string selected_dev = item->text().toStdString();
     if(!ui->listWidget->currentItem()->isSelected()){
         ui->statusbar->showMessage("Choose dev");
         return;
     }
 
-    if(!ui->radioButton_ALL->isChecked()){
-        if(ui->checkBox_TCP->checkState() == Qt::Checked) tcp = true;
-        if(ui->checkBox_UDP->checkState() == Qt::Checked) udp = true;
-        if(ui->checkBox_ICMP->checkState() == Qt::Checked) icmp = true;
-    }else all = true;
+    CaptureSettings settings;
+    settings.device = selected_dev;
+    settings.tcp = ui->checkBox_TCP->isChecked();
+    settings.udp = ui->checkBox_UDP->isChecked();
+    settings.icmp = ui->checkBox_ICMP->isChecked();
 
-    if(all == false && tcp == false && udp == false && icmp == false){
+    if(!settings.tcp && !settings.udp && !settings.icmp){
         ui->statusbar->showMessage("Choose protocol");
         return;
     }
 
+    auto *sec = new SecondMainWindow(settings, this);
+    connect(sec, &QDialog::finished, this, &QWidget::show);
+    connect(sec, &QDialog::finished, sec, &QObject::deleteLater);
     hide();
-    sec = new SecondMainWindow(this);
     sec->show();
 }
 

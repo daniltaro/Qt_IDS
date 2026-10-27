@@ -1,263 +1,202 @@
 #include "secondmainwindow.h"
 #include "ui_secondmainwindow.h"
-#include "../packetHandlers/packetworker.h"
 #include "anim.h"
 
-#include <QLabel>
-#include <QLineEdit>
-#include <QRadioButton>
-#include <QPushButton>
-#include <QThread>
-#include <QMessageBox>
+#include <QDir>
+#include <QFile>
 #include <QFileDialog>
+#include <QMessageBox>
+#include <QThread>
 
-extern std::string selected_dev;
-extern bool all;
-extern bool tcp;
-extern bool udp;
-extern bool icmp;
-std::string save_buf;
+namespace {
+// older rows are dropped so a long capture or a flood does not eat all the memory
+constexpr int MAX_ROWS = 20000;
 
-SecondMainWindow::SecondMainWindow(QWidget *parent)
+constexpr int PAYLOAD_ROLE = Qt::UserRole;
+constexpr int THREAT_ROLE = Qt::UserRole + 1;
+}
+
+SecondMainWindow::SecondMainWindow(const CaptureSettings &settings, QWidget *parent)
     : QDialog(parent)
     , ui(new Ui::SecondMainWindow)
+    , settings(settings)
 {
     ui->setupUi(this);
-    ui->label->setText("Running " + QString::fromStdString(selected_dev));
+    // a single radio button is auto-exclusive and could never be unchecked otherwise
+    ui->radioButton->setAutoExclusive(false);
 
-    worker = new PacketWorker(selected_dev, tcp, icmp, udp, all);
-    thread = new QThread(this);
+    connect(ui->pushButton, &QPushButton::pressed, this, [this]() { anim::animateButton(ui->pushButton); });
+    connect(ui->pushButton_2, &QPushButton::pressed, this, [this]() { anim::animateButton(ui->pushButton_2); });
+    connect(ui->pushButton_3, &QPushButton::pressed, this, [this]() { anim::animateButton(ui->pushButton_3); });
+    connect(ui->pushButton_4, &QPushButton::pressed, this, [this]() { anim::animateButton(ui->pushButton_4); });
+    connect(ui->radioButton, &QRadioButton::pressed, this, [this]() { anim::animateRadioButton(ui->radioButton); });
 
-    worker->moveToThread(thread);
+    connect(ui->pushButton, &QPushButton::clicked, this, &SecondMainWindow::stopCapture);
+    connect(ui->pushButton_2, &QPushButton::clicked, this, &SecondMainWindow::restartCapture);
+    connect(ui->pushButton_3, &QPushButton::clicked, this, &SecondMainWindow::reject);
+    connect(ui->pushButton_4, &QPushButton::clicked, this, &SecondMainWindow::saveJson);
+    connect(ui->tableWidget, &QTableWidget::cellClicked, this, &SecondMainWindow::showPayload);
+    connect(ui->lineEdit, &QLineEdit::textChanged, this, &SecondMainWindow::applyFilter);
+    connect(ui->radioButton, &QRadioButton::toggled, this, &SecondMainWindow::applyFilter);
 
-    QObject::connect(ui->pushButton, &QPushButton::pressed, [&](){anim::animateButton(ui->pushButton);});
-    QObject::connect(ui->pushButton_2, &QPushButton::pressed, [&](){anim::animateButton(ui->pushButton_2);});
-    QObject::connect(ui->pushButton_3, &QPushButton::pressed, [&](){anim::animateButton(ui->pushButton_3);});
-    QObject::connect(ui->pushButton_4, &QPushButton::pressed, [&](){anim::animateButton(ui->pushButton_4);});
-    QObject::connect(ui->radioButton, &QRadioButton::pressed, [&](){
-        anim::animateRadioButton(ui->radioButton);
-    });
-
-    connect(thread, &QThread::started, worker, &PacketWorker::startCapture);
-    connect(thread, &QThread::finished, thread, &QThread::deleteLater);
-
-    connect(worker, &PacketWorker::finished, thread, &QThread::quit);
-    connect(worker, &PacketWorker::finished, worker, &PacketWorker::deleteLater); 
-    connect(worker, &PacketWorker::packetCaptured, this, &SecondMainWindow::insertPacket);
-    connect(worker, &PacketWorker::statReady, this, [&](const QString& stat){
-        ui->textEdit->setText(stat);
-    });
-    connect(worker, &PacketWorker::linkTypeError, this, &SecondMainWindow::linkError);
-
-    ui->pushButton_4->setDisabled(true);
-    ui->pushButton_2->setDisabled(true);
-    ui->pushButton->setEnabled(true);
-    ui->lineEdit->setDisabled(true);
-    ui->radioButton->setDisabled(true);
-
-    thread->start();
-
+    startCapture();
 }
 
 SecondMainWindow::~SecondMainWindow()
 {
+    stopWorker();
     delete ui;
 }
 
-
-void SecondMainWindow::insertPacket(const PacketData& packData)
+void SecondMainWindow::done(int result)
 {
-    ui->tableWidget->insertRow(ui->tableWidget->rowCount());
-
-    ui->tableWidget->setItem(ui->tableWidget->rowCount()-1, 0, new QTableWidgetItem(packData.protocol));
-    ui->tableWidget->setItem(ui->tableWidget->rowCount()-1, 1, new QTableWidgetItem(packData.type));
-    ui->tableWidget->setItem(ui->tableWidget->rowCount()-1, 2, new QTableWidgetItem(packData.srcDst));
-    qDebug() << "Row inserted:" << packData.protocol << packData.srcDst;
-
-    packHex.push_back(packData.hex);
+    stopWorker();
+    QDialog::done(result);
 }
 
-
-void SecondMainWindow::linkError()
+void SecondMainWindow::startCapture()
 {
-    QMessageBox mes(this);
-    mes.setIcon(QMessageBox::Critical);
-    mes.setText("Error");
-    mes.setInformativeText(QString::fromStdString(selected_dev) + " is not supported");
-    mes.setStandardButtons(QMessageBox::Ok);
-    int ret = mes.exec();
-    if(ret == QMessageBox::Ok) on_pushButton_3_clicked();
-}
-
-void SecondMainWindow::on_pushButton_clicked()
-{
-    if(worker){
-        worker->stopCapture();
-        worker->deleteLater();
-        worker = nullptr;
-        qDebug("worker deleted");
-    }
-
-    if(thread){
-        if(thread->isRunning()){
-            thread->quit();
-            thread->wait();
-            qDebug("thread ended");
-        }
-        thread->deleteLater();
-        thread = nullptr;
-        qDebug("thread deleted");
-    }
-
-    ui->pushButton_4->setEnabled(true);
-    ui->pushButton_2->setEnabled(true);
-    ui->pushButton->setDisabled(true);
-    ui->lineEdit->setEnabled(true);
-    ui->radioButton->setEnabled(true);
-    ui->label->setText("Stoped " + QString::fromStdString(selected_dev));
-
-}
-
-
-void SecondMainWindow::on_pushButton_2_clicked()
-{
-    QMessageBox msgBox(this);
-    msgBox.setText("Statistic will not be saved");
-    msgBox.setInformativeText("Do you want to save your changes?");
-    msgBox.setStandardButtons(QMessageBox::Save | QMessageBox::Discard | QMessageBox::Cancel);
-    msgBox.setDefaultButton(QMessageBox::Save);
-    int ret = msgBox.exec();
-
-    ui->radioButton->setChecked(false);
-    ui->lineEdit->clear();
-
-    if(ret == QMessageBox::Save){
-        on_pushButton_4_clicked();
-    }else if(ret == QMessageBox::Cancel){
-        return;
-    }else if(ret == QMessageBox::Discard){
-    }
-
-    ui->tableWidget->setRowCount(0);
-    ui->textEdit->clear();
-    ui->textEdit_2->clear();
-    packHex.clear();
-    save_buf = "";
+    json.clear();
 
     thread = new QThread(this);
-    worker = new PacketWorker(selected_dev, tcp, icmp, udp, all);
+    worker = new PacketWorker(settings);
     worker->moveToThread(thread);
 
     connect(thread, &QThread::started, worker, &PacketWorker::startCapture);
-    connect(thread, &QThread::finished, thread, &QThread::deleteLater);
-
     connect(worker, &PacketWorker::finished, thread, &QThread::quit);
-    connect(worker, &PacketWorker::finished, worker, &PacketWorker::deleteLater);
-    connect(worker, &PacketWorker::packetCaptured, this, &SecondMainWindow::insertPacket);
-    connect(worker, &PacketWorker::statReady, this, [&](const QString& stat){
-        ui->textEdit->setText(stat);
-    });
-    connect(worker, &PacketWorker::linkTypeError, this, &SecondMainWindow::linkError);
+    connect(worker, &PacketWorker::packetsCaptured, this, &SecondMainWindow::insertPackets);
+    connect(worker, &PacketWorker::statReady, ui->textEdit, &QTextEdit::setPlainText);
+    connect(worker, &PacketWorker::jsonReady, this, [this](const QByteArray &data) { json = data; });
+    connect(worker, &PacketWorker::captureError, this, &SecondMainWindow::showCaptureError);
 
     thread->start();
-
-    ui->pushButton_4->setDisabled(true);
-    ui->pushButton_2->setDisabled(true);
-    ui->pushButton->setEnabled(true);
-    ui->lineEdit->setDisabled(true);
-    ui->radioButton->setDisabled(true);
-    ui->label->setText("Running " + QString::fromStdString(selected_dev));
-
+    setRunning(true);
 }
 
-
-void SecondMainWindow::on_pushButton_4_clicked()
+void SecondMainWindow::stopWorker()
 {
-    QString curPath = QDir::currentPath() + "/data.json";
-    std::string json_file_name = QFileDialog::getSaveFileName(this, tr("Select json file"),
-    curPath, tr("JSON Files (*.json);;All Files (*)")).toStdString();
+    if (!thread) return;
 
+    worker->stopCapture();
+    thread->quit();
+    thread->wait();
 
-    std::fstream out(json_file_name, std::ios::out);
-    out << save_buf;
-    out.close();
+    // the thread is finished, so the worker can be deleted from here
+    delete worker;
+    delete thread;
+    worker = nullptr;
+    thread = nullptr;
 }
 
-
-void SecondMainWindow::on_pushButton_3_clicked()
+void SecondMainWindow::stopCapture()
 {
-    save_buf = "";
-    close();
+    stopWorker();
+    setRunning(false);
+}
 
-    if(worker){
-        worker->stopCapture();
-        worker->deleteLater();
-        worker = nullptr;
-        qDebug("worker deleted");
+void SecondMainWindow::setRunning(bool running)
+{
+    ui->pushButton->setEnabled(running);
+    ui->pushButton_2->setEnabled(!running);
+    ui->pushButton_4->setEnabled(!running);
+    ui->lineEdit->setEnabled(!running);
+    ui->radioButton->setEnabled(!running);
+
+    const QString device = QString::fromStdString(settings.device);
+    ui->label->setText((running ? "Running " : "Stopped ") + device);
+}
+
+void SecondMainWindow::insertPackets(const QVector<PacketData> &packets)
+{
+    QTableWidget *table = ui->tableWidget;
+    table->setUpdatesEnabled(false);
+
+    for (const PacketData &packData : packets) {
+        const int row = table->rowCount();
+        table->insertRow(row);
+
+        auto *protocolItem = new QTableWidgetItem(packData.protocol);
+        protocolItem->setData(PAYLOAD_ROLE, packData.payload);
+        protocolItem->setData(THREAT_ROLE, packData.threat);
+
+        table->setItem(row, 0, protocolItem);
+        table->setItem(row, 1, new QTableWidgetItem(packData.type));
+        table->setItem(row, 2, new QTableWidgetItem(packData.srcDst));
     }
 
-    if(thread){
-        if(thread->isRunning()){
-            thread->quit();
-            thread->wait();
-            qDebug("thread ended");
-        }
-        thread->deleteLater();
-        thread = nullptr;
-        qDebug("thread deleted");
-    }
+    const int excess = table->rowCount() - MAX_ROWS;
+    if (excess > 0) table->model()->removeRows(0, excess);
 
-    if(parentWidget()){
-        parentWidget()->show();
-    }
+    table->setUpdatesEnabled(true);
 }
 
-
-void SecondMainWindow::on_tableWidget_cellClicked(int row, int column)
+void SecondMainWindow::showCaptureError(const QString &message)
 {
-    ui->textEdit_2->setText(packHex[row]);
+    QMessageBox::critical(this, tr("Capture error"), message);
+    reject();
 }
 
-
-void SecondMainWindow::on_lineEdit_textChanged(const QString &arg1)
+void SecondMainWindow::restartCapture()
 {
-    for(int i = 0; i < ui->tableWidget->rowCount(); ++i){
-        bool match = false;
-        for(int j = 0; j < ui->tableWidget->columnCount(); ++j){
-            if(ui->tableWidget->item(i, j) && ui->tableWidget->item(i, j)->text().contains
-                                               (arg1, Qt::CaseInsensitive)){
-                match = true;
-                break;
+    const auto answer = QMessageBox::question(this, tr("Start new capture"),
+        tr("Captured packets will be cleared. Save them first?"),
+        QMessageBox::Save | QMessageBox::Discard | QMessageBox::Cancel, QMessageBox::Save);
+
+    if (answer == QMessageBox::Cancel) return;
+    if (answer == QMessageBox::Save && !saveJson()) return;
+
+    ui->radioButton->setChecked(false);
+    ui->lineEdit->clear();
+    ui->tableWidget->setRowCount(0);
+    ui->textEdit->clear();
+    ui->textEdit_2->clear();
+
+    startCapture();
+}
+
+bool SecondMainWindow::saveJson()
+{
+    const QString defaultPath = QDir::currentPath() + "/data.json";
+    const QString fileName = QFileDialog::getSaveFileName(this, tr("Select json file"),
+        defaultPath, tr("JSON Files (*.json);;All Files (*)"));
+    if (fileName.isEmpty()) return false;
+
+    QFile file(fileName);
+    if (!file.open(QIODevice::WriteOnly | QIODevice::Truncate) || file.write(json) != json.size()) {
+        QMessageBox::warning(this, tr("Save failed"),
+                             tr("Cannot write %1: %2").arg(fileName, file.errorString()));
+        return false;
+    }
+    return true;
+}
+
+void SecondMainWindow::showPayload(int row, int)
+{
+    const QTableWidgetItem *item = ui->tableWidget->item(row, 0);
+    if (!item) return;
+    ui->textEdit_2->setPlainText(formatHexDump(item->data(PAYLOAD_ROLE).toByteArray()));
+}
+
+void SecondMainWindow::applyFilter()
+{
+    const QString text = ui->lineEdit->text();
+    const bool threatsOnly = ui->radioButton->isChecked();
+    QTableWidget *table = ui->tableWidget;
+
+    for (int row = 0; row < table->rowCount(); ++row) {
+        const QTableWidgetItem *first = table->item(row, 0);
+        bool match = !threatsOnly || (first && first->data(THREAT_ROLE).toBool());
+
+        if (match && !text.isEmpty()) {
+            match = false;
+            for (int column = 0; column < table->columnCount(); ++column) {
+                const QTableWidgetItem *item = table->item(row, column);
+                if (item && item->text().contains(text, Qt::CaseInsensitive)) {
+                    match = true;
+                    break;
+                }
             }
         }
-        ui->tableWidget->setRowHidden(i, !match);
+        table->setRowHidden(row, !match);
     }
 }
-
-
-void SecondMainWindow::on_radioButton_clicked(bool checked)
-{
-    ui->lineEdit->setText("");
-    if(!checked){
-        ui->lineEdit->setEnabled(true);
-        for(int i = 0; i < ui->tableWidget->rowCount(); ++i){
-            ui->tableWidget->setRowHidden(i, false);
-        }
-        return;
-    }
-
-    ui->lineEdit->setDisabled(true);
-    for(int i = 0; i < ui->tableWidget->rowCount(); ++i){
-        bool match = false;
-        for(int j = 0; j < ui->tableWidget->columnCount(); ++j){
-            if(ui->tableWidget->item(i, j)&& ui->tableWidget->item(i, j)->text().contains
-                                                ("[", Qt::CaseInsensitive)){
-                match = true;
-                break;
-            }
-        }
-        ui->tableWidget->setRowHidden(i, !match);
-    }
-}
-
-
