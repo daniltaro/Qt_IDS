@@ -11,14 +11,14 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Dialog</string>
+   <string>Qt IDS - Capture</string>
   </property>
   <layout class="QGridLayout" name="gridLayout_3">
    <property name="spacing">
     <number>5</number>
    </property>
    <item row="4" column="1" rowspan="2" colspan="2">
-    <widget class="QLabel" name="label">
+    <widget class="QLabel" name="statusLabel">
      <property name="font">
       <font>
        <family>American Typewriter</family>
@@ -35,7 +35,7 @@
     </widget>
    </item>
    <item row="8" column="2">
-    <widget class="QPushButton" name="pushButton">
+    <widget class="QPushButton" name="stopButton">
      <property name="sizePolicy">
       <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
        <horstretch>0</horstretch>
@@ -88,7 +88,7 @@ QPushButton:disabled {
     </widget>
    </item>
    <item row="6" column="1" colspan="2">
-    <widget class="QPushButton" name="pushButton_3">
+    <widget class="QPushButton" name="backButton">
      <property name="sizePolicy">
       <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
        <horstretch>0</horstretch>
@@ -141,7 +141,7 @@ QPushButton:disabled {
     </widget>
    </item>
    <item row="2" column="0">
-    <widget class="QRadioButton" name="radioButton">
+    <widget class="QRadioButton" name="threatsOnlyButton">
      <property name="enabled">
       <bool>true</bool>
      </property>
@@ -185,7 +185,7 @@ QRadioButton::indicator:checked::pressed {
     </widget>
    </item>
    <item row="3" column="0">
-    <widget class="QTableWidget" name="tableWidget">
+    <widget class="QTableWidget" name="packetTable">
      <property name="sizePolicy">
       <sizepolicy hsizetype="MinimumExpanding" vsizetype="Expanding">
        <horstretch>0</horstretch>
@@ -273,7 +273,7 @@ QHeaderView::section {
     </widget>
    </item>
    <item row="7" column="1" colspan="2">
-    <widget class="QPushButton" name="pushButton_4">
+    <widget class="QPushButton" name="saveButton">
      <property name="sizePolicy">
       <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
        <horstretch>0</horstretch>
@@ -320,7 +320,7 @@ QPushButton:disabled {
     </widget>
    </item>
    <item row="4" column="0" rowspan="5">
-    <widget class="QTextEdit" name="textEdit">
+    <widget class="QTextEdit" name="statsView">
      <property name="font">
       <font>
        <family>Courier New</family>
@@ -352,7 +352,7 @@ QTextEdit:focus {
     </widget>
    </item>
    <item row="8" column="1">
-    <widget class="QPushButton" name="pushButton_2">
+    <widget class="QPushButton" name="startButton">
      <property name="enabled">
       <bool>false</bool>
      </property>
@@ -399,7 +399,7 @@ QPushButton:disabled {
     </widget>
    </item>
    <item row="1" column="1" rowspan="3" colspan="2">
-    <widget class="QTextEdit" name="textEdit_2">
+    <widget class="QTextEdit" name="payloadView">
      <property name="minimumSize">
       <size>
        <width>650</width>
@@ -438,7 +438,7 @@ QTextEdit:focus {
     </widget>
    </item>
    <item row="0" column="0">
-    <widget class="QLabel" name="label_2">
+    <widget class="QLabel" name="filtersLabel">
      <property name="font">
       <font>
        <family>American Typewriter</family>
@@ -455,7 +455,7 @@ QTextEdit:focus {
     </widget>
    </item>
    <item row="1" column="0">
-    <widget class="QLineEdit" name="lineEdit">
+    <widget class="QLineEdit" name="filterEdit">
      <property name="enabled">
       <bool>true</bool>
      </property>

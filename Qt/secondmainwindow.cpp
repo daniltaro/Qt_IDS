@@ -23,21 +23,21 @@ SecondMainWindow::SecondMainWindow(const CaptureSettings &settings, QWidget *par
 {
     ui->setupUi(this);
     // a single radio button is auto-exclusive and could never be unchecked otherwise
-    ui->radioButton->setAutoExclusive(false);
+    ui->threatsOnlyButton->setAutoExclusive(false);
 
-    connect(ui->pushButton, &QPushButton::pressed, this, [this]() { anim::animateButton(ui->pushButton); });
-    connect(ui->pushButton_2, &QPushButton::pressed, this, [this]() { anim::animateButton(ui->pushButton_2); });
-    connect(ui->pushButton_3, &QPushButton::pressed, this, [this]() { anim::animateButton(ui->pushButton_3); });
-    connect(ui->pushButton_4, &QPushButton::pressed, this, [this]() { anim::animateButton(ui->pushButton_4); });
-    connect(ui->radioButton, &QRadioButton::pressed, this, [this]() { anim::animateRadioButton(ui->radioButton); });
+    connect(ui->stopButton, &QPushButton::pressed, this, [this]() { anim::animateButton(ui->stopButton); });
+    connect(ui->startButton, &QPushButton::pressed, this, [this]() { anim::animateButton(ui->startButton); });
+    connect(ui->backButton, &QPushButton::pressed, this, [this]() { anim::animateButton(ui->backButton); });
+    connect(ui->saveButton, &QPushButton::pressed, this, [this]() { anim::animateButton(ui->saveButton); });
+    connect(ui->threatsOnlyButton, &QRadioButton::pressed, this, [this]() { anim::animateRadioButton(ui->threatsOnlyButton); });
 
-    connect(ui->pushButton, &QPushButton::clicked, this, &SecondMainWindow::stopCapture);
-    connect(ui->pushButton_2, &QPushButton::clicked, this, &SecondMainWindow::restartCapture);
-    connect(ui->pushButton_3, &QPushButton::clicked, this, &SecondMainWindow::reject);
-    connect(ui->pushButton_4, &QPushButton::clicked, this, &SecondMainWindow::saveJson);
-    connect(ui->tableWidget, &QTableWidget::cellClicked, this, &SecondMainWindow::showPayload);
-    connect(ui->lineEdit, &QLineEdit::textChanged, this, &SecondMainWindow::applyFilter);
-    connect(ui->radioButton, &QRadioButton::toggled, this, &SecondMainWindow::applyFilter);
+    connect(ui->stopButton, &QPushButton::clicked, this, &SecondMainWindow::stopCapture);
+    connect(ui->startButton, &QPushButton::clicked, this, &SecondMainWindow::restartCapture);
+    connect(ui->backButton, &QPushButton::clicked, this, &SecondMainWindow::reject);
+    connect(ui->saveButton, &QPushButton::clicked, this, &SecondMainWindow::saveJson);
+    connect(ui->packetTable, &QTableWidget::cellClicked, this, &SecondMainWindow::showPayload);
+    connect(ui->filterEdit, &QLineEdit::textChanged, this, &SecondMainWindow::applyFilter);
+    connect(ui->threatsOnlyButton, &QRadioButton::toggled, this, &SecondMainWindow::applyFilter);
 
     startCapture();
 }
@@ -65,7 +65,7 @@ void SecondMainWindow::startCapture()
     connect(thread, &QThread::started, worker, &PacketWorker::startCapture);
     connect(worker, &PacketWorker::finished, thread, &QThread::quit);
     connect(worker, &PacketWorker::packetsCaptured, this, &SecondMainWindow::insertPackets);
-    connect(worker, &PacketWorker::statReady, ui->textEdit, &QTextEdit::setPlainText);
+    connect(worker, &PacketWorker::statReady, ui->statsView, &QTextEdit::setPlainText);
     connect(worker, &PacketWorker::jsonReady, this, [this](const QByteArray &data) { json = data; });
     connect(worker, &PacketWorker::captureError, this, &SecondMainWindow::showCaptureError);
 
@@ -96,19 +96,19 @@ void SecondMainWindow::stopCapture()
 
 void SecondMainWindow::setRunning(bool running)
 {
-    ui->pushButton->setEnabled(running);
-    ui->pushButton_2->setEnabled(!running);
-    ui->pushButton_4->setEnabled(!running);
-    ui->lineEdit->setEnabled(!running);
-    ui->radioButton->setEnabled(!running);
+    ui->stopButton->setEnabled(running);
+    ui->startButton->setEnabled(!running);
+    ui->saveButton->setEnabled(!running);
+    ui->filterEdit->setEnabled(!running);
+    ui->threatsOnlyButton->setEnabled(!running);
 
     const QString device = QString::fromStdString(settings.device);
-    ui->label->setText((running ? "Running " : "Stopped ") + device);
+    ui->statusLabel->setText((running ? "Running " : "Stopped ") + device);
 }
 
 void SecondMainWindow::insertPackets(const QVector<PacketData> &packets)
 {
-    QTableWidget *table = ui->tableWidget;
+    QTableWidget *table = ui->packetTable;
     table->setUpdatesEnabled(false);
 
     for (const PacketData &packData : packets) {
@@ -145,11 +145,11 @@ void SecondMainWindow::restartCapture()
     if (answer == QMessageBox::Cancel) return;
     if (answer == QMessageBox::Save && !saveJson()) return;
 
-    ui->radioButton->setChecked(false);
-    ui->lineEdit->clear();
-    ui->tableWidget->setRowCount(0);
-    ui->textEdit->clear();
-    ui->textEdit_2->clear();
+    ui->threatsOnlyButton->setChecked(false);
+    ui->filterEdit->clear();
+    ui->packetTable->setRowCount(0);
+    ui->statsView->clear();
+    ui->payloadView->clear();
 
     startCapture();
 }
@@ -172,16 +172,16 @@ bool SecondMainWindow::saveJson()
 
 void SecondMainWindow::showPayload(int row, int)
 {
-    const QTableWidgetItem *item = ui->tableWidget->item(row, 0);
+    const QTableWidgetItem *item = ui->packetTable->item(row, 0);
     if (!item) return;
-    ui->textEdit_2->setPlainText(formatHexDump(item->data(PAYLOAD_ROLE).toByteArray()));
+    ui->payloadView->setPlainText(formatHexDump(item->data(PAYLOAD_ROLE).toByteArray()));
 }
 
 void SecondMainWindow::applyFilter()
 {
-    const QString text = ui->lineEdit->text();
-    const bool threatsOnly = ui->radioButton->isChecked();
-    QTableWidget *table = ui->tableWidget;
+    const QString text = ui->filterEdit->text();
+    const bool threatsOnly = ui->threatsOnlyButton->isChecked();
+    QTableWidget *table = ui->packetTable;
 
     for (int row = 0; row < table->rowCount(); ++row) {
         const QTableWidgetItem *first = table->item(row, 0);

@@ -1,9 +1,10 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
+#include <QList>
 #include <QMainWindow>
-#include <QListWidget>
-#include "secondmainwindow.h"
+
+class QCheckBox;
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
@@ -20,19 +21,20 @@ public:
     ~MainWindow();
 
 private slots:
-    void on_pushButton_clicked();
+    // Start button and double click on a device
+    void startCapture();
 
-    void on_radioButton_ALL_pressed();
+    // ALL checks or unchecks every protocol
+    void selectAllProtocols(bool checked);
 
-    void on_checkBox_ICMP_pressed();
-
-    void on_checkBox_UDP_pressed();
-
-    void on_checkBox_TCP_pressed();
-
-    void on_listWidget_itemDoubleClicked(QListWidgetItem *item);
+    // keeps ALL checked only while every protocol is checked
+    void syncAllButton();
 
 private:
+    void loadDevices();
+
+    QList<QCheckBox *> protocolBoxes() const;
+
     Ui::MainWindow *ui;
 };
 #endif // MAINWINDOW_H
