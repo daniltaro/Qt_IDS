@@ -77,3 +77,9 @@ install(TARGETS Qt_IDS
 )
 
 qt_finalize_executable(Qt_IDS)
+
+option(QT_IDS_BUILD_TESTS "Build unit tests" ON)
+if(QT_IDS_BUILD_TESTS)
+    enable_testing()
+    add_subdirectory(tests)
+endif()
