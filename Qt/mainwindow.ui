@@ -16,12 +16,12 @@
    </font>
   </property>
   <property name="windowTitle">
-   <string>MainWindow</string>
+   <string>Qt IDS</string>
   </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QGridLayout" name="gridLayout">
     <item row="3" column="0">
-     <widget class="QCheckBox" name="checkBox_UDP">
+     <widget class="QCheckBox" name="udpCheckBox">
       <property name="font">
        <font>
         <family>American Typewriter</family>
@@ -73,7 +73,7 @@ QCheckBox::indicator:disabled {
      </widget>
     </item>
     <item row="5" column="0">
-     <widget class="QCheckBox" name="checkBox_TCP">
+     <widget class="QCheckBox" name="tcpCheckBox">
       <property name="font">
        <font>
         <family>American Typewriter</family>
@@ -125,7 +125,7 @@ QCheckBox::indicator:disabled {
      </widget>
     </item>
     <item row="4" column="0">
-     <widget class="QCheckBox" name="checkBox_ICMP">
+     <widget class="QCheckBox" name="icmpCheckBox">
       <property name="font">
        <font>
         <family>American Typewriter</family>
@@ -177,7 +177,7 @@ QCheckBox::indicator:disabled {
      </widget>
     </item>
     <item row="0" column="0">
-     <widget class="QLabel" name="label">
+     <widget class="QLabel" name="devicesLabel">
       <property name="font">
        <font>
         <family>American Typewriter</family>
@@ -193,7 +193,7 @@ QCheckBox::indicator:disabled {
      </widget>
     </item>
     <item row="1" column="0">
-     <widget class="QListWidget" name="listWidget">
+     <widget class="QListWidget" name="deviceList">
       <property name="font">
        <font>
         <family>Courier New</family>
@@ -228,7 +228,7 @@ QListWidget::item:hover {
      </widget>
     </item>
     <item row="6" column="0">
-     <widget class="QRadioButton" name="radioButton_ALL">
+     <widget class="QRadioButton" name="allRadioButton">
       <property name="font">
        <font>
         <family>American Typewriter</family>
@@ -278,7 +278,7 @@ QRadioButton::indicator:checked::pressed {
      </widget>
     </item>
     <item row="7" column="0">
-     <widget class="QPushButton" name="pushButton">
+     <widget class="QPushButton" name="startButton">
       <property name="font">
        <font>
         <family>American Typewriter</family>
@@ -322,7 +322,7 @@ QPushButton:disabled {
      </widget>
     </item>
     <item row="2" column="0">
-     <widget class="QLabel" name="label_2">
+     <widget class="QLabel" name="protocolsLabel">
       <property name="font">
        <font>
         <family>American Typewriter</family>

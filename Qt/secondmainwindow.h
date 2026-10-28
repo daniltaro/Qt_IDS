@@ -3,8 +3,11 @@
 
 #include "../packetHandlers/packetworker.h"
 
+#include <QByteArray>
 #include <QDialog>
 #include <QVector>
+
+class QThread;
 
 namespace Ui {
 class SecondMainWindow;
@@ -15,33 +18,40 @@ class SecondMainWindow : public QDialog
     Q_OBJECT
 
 public:
-    explicit SecondMainWindow(QWidget *parent = nullptr);
+    explicit SecondMainWindow(const CaptureSettings &settings, QWidget *parent = nullptr);
     ~SecondMainWindow();
 
+    // Back button, Esc and the window close button all end up here
+    void done(int result) override;
+
 private slots:
-    void insertPacket(const PacketData&);
+    void insertPackets(const QVector<PacketData> &packets);
 
-    void linkError();
+    void showCaptureError(const QString &message);
 
-    void on_pushButton_clicked();
+    void stopCapture();
 
-    void on_pushButton_2_clicked();
+    void restartCapture();
 
-    void on_pushButton_4_clicked();
+    bool saveJson();
 
-    void on_pushButton_3_clicked();
+    void showPayload(int row, int column);
 
-    void on_tableWidget_cellClicked(int row, int column);
-
-    void on_lineEdit_textChanged(const QString &arg1);
-
-    void on_radioButton_clicked(bool checked);
+    void applyFilter();
 
 private:
+    void startCapture();
+
+    // stops the capture thread and waits for it, safe to call when nothing is running
+    void stopWorker();
+
+    void setRunning(bool running);
+
     Ui::SecondMainWindow *ui;
-    QThread* thread;
-    PacketWorker* worker;
-    QVector<QString> packHex;
+    CaptureSettings settings;
+    QThread *thread = nullptr;
+    PacketWorker *worker = nullptr;
+    QByteArray json;
 };
 
 #endif // SECONDMAINWINDOW_H

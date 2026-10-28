@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.16)
+cmake_minimum_required(VERSION 3.18)
 
 project(Qt_IDS VERSION 0.1 LANGUAGES CXX)
 
@@ -11,9 +11,33 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 find_package(QT NAMES Qt6 REQUIRED COMPONENTS Widgets Core)
 find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets Core)
-find_library(PCAP_LIB pcap  REQUIRED)
+find_library(PCAP_LIB pcap REQUIRED)
 find_package(nlohmann_json REQUIRED)
 message(STATUS "PCAP_LIB - "${PCAP_LIB})
+
+# packet parsing and threat detection, shared by the app and the tests
+add_library(qt_ids_core STATIC
+        headers/ethernetheader.h
+        headers/ethernetheader.cpp
+        headers/icmpheader.h
+        headers/icmpheader.cpp
+        headers/ipv4header.h
+        headers/ipv4header.cpp
+        headers/tcpheader.h
+        headers/tcpheader.cpp
+        headers/udpheader.h
+        headers/udpheader.cpp
+        threatDetector/threatdetector.h
+        threatDetector/threatdetector.cpp
+        packetHandlers/packethandler.h
+        packetHandlers/packethandler.cpp
+)
+
+target_link_libraries(qt_ids_core PUBLIC
+    Qt${QT_VERSION_MAJOR}::Core
+    ${PCAP_LIB}
+    nlohmann_json::nlohmann_json
+)
 
 set(PROJECT_SOURCES
         main.cpp
@@ -23,27 +47,9 @@ set(PROJECT_SOURCES
         Qt/secondmainwindow.h
         Qt/secondmainwindow.cpp
         Qt/secondmainwindow.ui
-        threatDetector/threatdetector.h 
-        threatDetector/threatdetector.cpp
-        packetHandlers/basehandler.h 
-        packetHandlers/basehandler.cpp
-        packetHandlers/ethernethandler.h
-        packetHandlers/ethernethandler.cpp
-        packetHandlers/loopbackhandler.h
-        packetHandlers/loopbackhandler.cpp
-        headers/ethernetheader.h 
-        headers/ethernetheader.cpp
-        headers/icmpheader.h 
-        headers/icmpheader.cpp
-        headers/ipv4header.h 
-        headers/ipv4header.cpp
-        headers/tcpheader.h 
-        headers/tcpheader.cpp
-        headers/udpheader.h 
-        headers/udpheader.cpp
+        Qt/anim.h
         packetHandlers/packetworker.h
         packetHandlers/packetworker.cpp
-        Qt/anim.h
 )
 
 qt_add_executable(Qt_IDS
@@ -53,20 +59,14 @@ qt_add_executable(Qt_IDS
 
 target_link_libraries(Qt_IDS PRIVATE
     Qt${QT_VERSION_MAJOR}::Widgets
-    Qt${QT_VERSION_MAJOR}::Core
-    ${PCAP_LIB}
-    nlohmann_json::nlohmann_json
+    qt_ids_core
 )
 
-if(${QT_VERSION} VERSION_LESS 6.1.0)
-  set(BUNDLE_ID_OPTION MACOSX_BUNDLE_GUI_IDENTIFIER com.example.my_IDS)
-endif()
 set_target_properties(Qt_IDS PROPERTIES
-    ${BUNDLE_ID_OPTION}
+    MACOSX_BUNDLE_GUI_IDENTIFIER com.example.my_IDS
     MACOSX_BUNDLE_BUNDLE_VERSION ${PROJECT_VERSION}
     MACOSX_BUNDLE_SHORT_VERSION_STRING ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}
     MACOSX_BUNDLE TRUE
-    WIN32_EXECUTABLE TRUE
 )
 
 include(GNUInstallDirs)
@@ -76,6 +76,10 @@ install(TARGETS Qt_IDS
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
 )
 
-if(QT_VERSION_MAJOR EQUAL 6)
-    qt_finalize_executable(Qt_IDS)
+qt_finalize_executable(Qt_IDS)
+
+option(QT_IDS_BUILD_TESTS "Build unit tests" ON)
+if(QT_IDS_BUILD_TESTS)
+    enable_testing()
+    add_subdirectory(tests)
 endif()

@@ -1,119 +1,98 @@
 #include "threatdetector.h"
-#include <QDebug>
 
-bool threatDetector::isSuspiciousICMP(std::string& type){
-    auto now = std::chrono::steady_clock::now();
-    auto time = std::chrono::duration_cast<std::chrono::seconds>(now - start_timeICMP);
-    bool flag = false;
-    if(time.count() >= 5){
-        if(icmp_count > 20){
-            start_timeICMP = now;
-            threatCount++;
-            flag = true;
+namespace {
+constexpr uint8_t ICMP_ECHO_REQUEST = 8;
+constexpr uint8_t TCP_SYN = 0x02;
+constexpr uint8_t TCP_ACK = 0x10;
+constexpr uint16_t FIRST_UNPRIVILEGED_PORT = 1024;
+}
 
-            type += "[ICMP FLOOD] ";
-            qDebug() << "[ICMP FLOOD] detected";
-        } else {
-            start_timeICMP = now;
-            icmp_count = 0;
-        }
-        qDebug() << "isSuspiciousICMP 5 seconds have passed";
+threatDetector::Timestamp threatDetector::toTimestamp(const timeval &tv) {
+    return std::chrono::seconds(tv.tv_sec) + std::chrono::microseconds(tv.tv_usec);
+}
+
+std::string threatDetector::inspectICMP(const std::string &dstIP, uint8_t type, Timestamp ts) {
+    dropExpired(ts);
+    std::string labels;
+    if (type != ICMP_ECHO_REQUEST) return labels;
+
+    Window &flood = window(icmpFlood, dstIP, ts);
+    if (++flood.packets > ICMP_FLOOD_THRESHOLD) report(flood, labels, "[ICMP FLOOD]");
+    return labels;
+}
+
+std::string threatDetector::inspectTCP(const std::string &srcIP, const std::string &dstIP,
+                                       uint16_t dstPort, uint8_t flags, Timestamp ts) {
+    dropExpired(ts);
+    std::string labels;
+
+    // SYN-ACK is a server reply: neither a new connection attempt nor a completed handshake
+    const bool syn = (flags & TCP_SYN) && !(flags & TCP_ACK);
+    const bool ack = (flags & TCP_ACK) && !(flags & TCP_SYN);
+
+    if (ack) window(synFlood, dstIP, ts).acks++;
+    if (!syn) return labels;
+
+    Window &flood = window(synFlood, dstIP, ts);
+    flood.packets++;
+    if (flood.packets > SYN_FLOOD_THRESHOLD && flood.acks < SYN_ACK_RATIO * flood.packets) {
+        report(flood, labels, "[SYN FLOOD]");
     }
-    return flag;
+
+    // only connection attempts count: replies to our own connections arrive on many random ports
+    Window &scan = window(tcpScan, srcIP + " -> " + dstIP, ts);
+    scan.ports.insert(dstPort);
+    if (scan.ports.size() > PORT_SCAN_THRESHOLD) report(scan, labels, "[TCP PORT SCANNING]");
+
+    return labels;
 }
 
-bool threatDetector::isSuspiciousTCP(std::string& type){
-    auto now = std::chrono::steady_clock::now();
-    auto time = std::chrono::duration_cast<std::chrono::seconds>(now - start_timeTCP);
-    bool flag = false;
+std::string threatDetector::inspectUDP(const std::string &srcIP, const std::string &dstIP,
+                                       uint16_t srcPort, uint16_t dstPort, Timestamp ts) {
+    dropExpired(ts);
+    std::string labels;
 
-    if(time.count() >= 5){
-        if (tcpSYN > 20 && ((double)tcpACK / tcpSYN) < 0.2){
-            start_timeTCP = now;
-            tcpACK = 0;
-            tcpSYN = 0;
-            flag = true;
-            threatCount++;
+    Window &flood = window(udpFlood, dstIP, ts);
+    if (++flood.packets > UDP_FLOOD_THRESHOLD) report(flood, labels, "[UDP FLOOD]");
 
-            type += "[SYN FLOOD] ";
-            qDebug() << "[SYN FLOOD] detected";
-        } else {
-            start_timeTCP = now;
-            tcpACK = 0;
-            tcpSYN = 0;
-        }
+    // replies from well-known services (DNS, NTP...) go to random ephemeral ports, that is not a scan
+    const bool reply = srcPort < FIRST_UNPRIVILEGED_PORT && dstPort >= FIRST_UNPRIVILEGED_PORT;
+    if (reply) return labels;
 
-        for(const auto& [ip, ports] : TCPscanner){
-            if(ports.size() > 100){
-                flag = true;
-                threatCount++;
+    Window &scan = window(udpScan, srcIP + " -> " + dstIP, ts);
+    scan.ports.insert(dstPort);
+    if (scan.ports.size() > PORT_SCAN_THRESHOLD) report(scan, labels, "[UDP PORT SCANNING]");
 
-                type += "[TCP PORT SCANING] ";
-                qDebug() << "[TCP PORT SCANING] detected";
-            }
-        }
-        qDebug() << "isSuspiciousTCP 5 seconds have passed";
-    }
-    return flag;
+    return labels;
 }
 
-bool threatDetector::issuspiciousUDP(std::string& type){
-    auto now = std::chrono::steady_clock::now();
-    auto time = std::chrono::duration_cast<std::chrono::seconds>(now - start_timeUDP);
-    bool flag = false;
-
-    if(time.count() >= 5){
-        if(UDP_packets > 100){
-            start_timeUDP = now;
-            UDP_packets = 0;
-            flag = true;
-            threatCount++;
-
-            type += "[UDP FLOOD] ";
-            qDebug() << "[UDP FLOOD] detected";
-        } else {
-            UDP_packets = 0;
-            start_timeUDP = now;
-        }
-
-        for(const auto& [ip, ports] : UDPscanner){
-            if(ports.size() > 100){
-                flag = true;
-                threatCount++;
-
-                type += "[UDP PORT SCANING] ";
-                qDebug() << "[UDP PORT SCANING] " << "detected";
-            }
-        }
-        qDebug() << "isSuspiciousUDP 5 seconds have passed";
-    }
-    return flag;
-}
-
-void threatDetector::tcpSYNAdd(){
-    tcpSYN += 1;
-}
-
-void threatDetector::tcpACKAdd(){
-    tcpACK += 1;
-}
-
-void threatDetector::icmpTypeAdd(){
-    icmp_count += 1;
-}
-
-void threatDetector::udpAdd(){
-    UDP_packets += 1;
-}
-
-int threatDetector::getThreatCount() const{
+int threatDetector::getThreatCount() const {
     return threatCount;
 }
 
-void threatDetector::addIPv4srcDstTCP(const std::string& ip, const u_int16_t& dst_port){
-    TCPscanner[ip].insert(dst_port);
+threatDetector::Window &threatDetector::window(WindowMap &map, const std::string &key, Timestamp ts) {
+    auto [it, inserted] = map.try_emplace(key);
+    if (inserted || ts - it->second.start >= WINDOW) it->second = Window{ts};
+    return it->second;
 }
 
-void threatDetector::addIPv4srcDstUDP(const std::string& ip, const u_int16_t& dst_port){
-    UDPscanner[ip].insert(dst_port);
+void threatDetector::report(Window &w, std::string &labels, const char *label) {
+    if (!w.reported) {
+        w.reported = true;
+        threatCount++;
+    }
+    if (!labels.empty()) labels += ' ';
+    labels += label;
+}
+
+void threatDetector::dropExpired(Timestamp ts) {
+    if (ts - lastCleanup < WINDOW) return;
+    lastCleanup = ts;
+
+    for (WindowMap *map : {&icmpFlood, &synFlood, &udpFlood, &tcpScan, &udpScan}) {
+        for (auto it = map->begin(); it != map->end();) {
+            if (ts - it->second.start >= WINDOW) it = map->erase(it);
+            else ++it;
+        }
+    }
 }

@@ -1,65 +1,36 @@
-#include <QDebug>
-#include <QFileDialog>
-#include <QMessageBox>
-#include <QListWidget>
-#include <QPropertyAnimation>
-#include <QGraphicsDropShadowEffect>
-
-#include "../packetHandlers/basehandler.h"
-#include "../packetHandlers/ethernethandler.h"
-#include "../packetHandlers/loopbackhandler.h"
 #include "mainwindow.h"
-#include "anim.h"
 #include "./ui_mainwindow.h"
+#include "anim.h"
+#include "secondmainwindow.h"
 
-#include <fstream>
+#include <QCheckBox>
+#include <QListWidget>
+
 #include <pcap.h>
-#include <iostream>
-#include <string>
-#include <thread>
-
-char ebuf[PCAP_ERRBUF_SIZE];
-std::string selected_dev;
-bool all = false;
-bool tcp = false;
-bool udp = false;
-bool icmp = false;
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
+    // a single radio button is auto-exclusive and could never be unchecked otherwise
+    ui->allRadioButton->setAutoExclusive(false);
 
-    QObject::connect(ui->pushButton, &QPushButton::pressed, [&](){anim::animateButton(ui->pushButton);});
-    QObject::connect(ui->checkBox_ICMP, &QCheckBox::pressed, [&](){
-        anim::animateCheckBox(ui->checkBox_ICMP);
+    connect(ui->startButton, &QPushButton::pressed, this, [this]() { anim::animateButton(ui->startButton); });
+    connect(ui->allRadioButton, &QRadioButton::pressed, this, [this]() {
+        anim::animateRadioButton(ui->allRadioButton);
     });
-    QObject::connect(ui->checkBox_UDP, &QCheckBox::pressed, [&](){
-        anim::animateCheckBox(ui->checkBox_UDP);
-    });
-    QObject::connect(ui->checkBox_TCP, &QCheckBox::pressed, [&](){
-        anim::animateCheckBox(ui->checkBox_TCP);
-    });
-    QObject::connect(ui->radioButton_ALL, &QRadioButton::pressed, [&](){
-        anim::animateRadioButton(ui->radioButton_ALL);
-    });
-
-    //devs output
-    pcap_if_t *devs;
-
-    if (pcap_findalldevs(&devs, ebuf) == -1) {
-        throw std::runtime_error("pcap_findalldevs");
+    for (QCheckBox *box : protocolBoxes()) {
+        connect(box, &QCheckBox::pressed, this, [box]() { anim::animateCheckBox(box); });
+        connect(box, &QCheckBox::clicked, this, &MainWindow::syncAllButton);
     }
 
-    pcap_if_t *temp = devs;
+    connect(ui->allRadioButton, &QRadioButton::clicked, this, &MainWindow::selectAllProtocols);
+    connect(ui->startButton, &QPushButton::clicked, this, &MainWindow::startCapture);
+    connect(ui->deviceList, &QListWidget::itemDoubleClicked, this, &MainWindow::startCapture);
 
-    while (temp != nullptr) {
-        ui->listWidget->addItem(temp->name);
-        temp = temp->next;
-    }
-    pcap_freealldevs(devs);
-
+    syncAllButton();
+    loadDevices();
 }
 
 MainWindow::~MainWindow()
@@ -67,95 +38,66 @@ MainWindow::~MainWindow()
     delete ui;
 }
 
-void MainWindow::on_pushButton_clicked()
+void MainWindow::loadDevices()
 {
-    selected_dev = ui->listWidget->currentItem()->text().toStdString();
-    if(!ui->listWidget->currentItem()->isSelected()){
+    char errbuf[PCAP_ERRBUF_SIZE] = {};
+    pcap_if_t *devs = nullptr;
+
+    if (pcap_findalldevs(&devs, errbuf) == -1) {
+        ui->statusbar->showMessage(tr("Cannot list devices: %1").arg(QString::fromLocal8Bit(errbuf)));
+        return;
+    }
+
+    for (pcap_if_t *dev = devs; dev != nullptr; dev = dev->next) {
+        ui->deviceList->addItem(QString::fromLocal8Bit(dev->name));
+    }
+    pcap_freealldevs(devs);
+}
+
+QList<QCheckBox *> MainWindow::protocolBoxes() const
+{
+    return {ui->tcpCheckBox, ui->udpCheckBox, ui->icmpCheckBox};
+}
+
+void MainWindow::startCapture()
+{
+    const QListWidgetItem *item = ui->deviceList->currentItem();
+    if (item == nullptr || !item->isSelected()) {
         ui->statusbar->showMessage("Choose dev");
         return;
     }
 
-    if(!ui->radioButton_ALL->isChecked()){
-        if(ui->checkBox_TCP->checkState() == Qt::Checked) tcp = true;
-        if(ui->checkBox_UDP->checkState() == Qt::Checked) udp = true;
-        if(ui->checkBox_ICMP->checkState() == Qt::Checked) icmp = true;
-    }else all = true;
+    CaptureSettings settings;
+    settings.device = item->text().toStdString();
+    settings.tcp = ui->tcpCheckBox->isChecked();
+    settings.udp = ui->udpCheckBox->isChecked();
+    settings.icmp = ui->icmpCheckBox->isChecked();
 
-    if(all == false && tcp == false && udp == false && icmp == false){
+    if (!settings.tcp && !settings.udp && !settings.icmp) {
         ui->statusbar->showMessage("Choose protocol");
         return;
     }
+    ui->statusbar->clearMessage();
 
+    auto *captureWindow = new SecondMainWindow(settings, this);
+    connect(captureWindow, &QDialog::finished, this, &QWidget::show);
+    connect(captureWindow, &QDialog::finished, captureWindow, &QObject::deleteLater);
     hide();
-    sec = new SecondMainWindow(this);
-    sec->show();
+    captureWindow->show();
 }
 
-
-void MainWindow::on_radioButton_ALL_pressed()
+void MainWindow::selectAllProtocols(bool checked)
 {
-    if(!ui->radioButton_ALL->isChecked()){
-        ui->checkBox_TCP->setCheckState(Qt::Checked);
-        ui->checkBox_UDP->setCheckState(Qt::Checked);
-        ui->checkBox_ICMP->setCheckState(Qt::Checked);
-    }else{
-        ui->checkBox_TCP->setCheckState(Qt::Unchecked);
-        ui->checkBox_UDP->setCheckState(Qt::Unchecked);
-        ui->checkBox_ICMP->setCheckState(Qt::Unchecked);
+    for (QCheckBox *box : protocolBoxes()) {
+        box->setChecked(checked);
     }
 }
 
-
-void MainWindow::on_checkBox_ICMP_pressed()
+void MainWindow::syncAllButton()
 {
-    if(ui->checkBox_ICMP->checkState() == Qt::Checked){
-        ui->radioButton_ALL->setChecked(false);
+    bool allChecked = true;
+    for (const QCheckBox *box : protocolBoxes()) {
+        allChecked = allChecked && box->isChecked();
     }
-
+    ui->allRadioButton->setChecked(allChecked);
 }
-
-
-void MainWindow::on_checkBox_UDP_pressed()
-{
-    if(ui->checkBox_UDP->checkState() == Qt::Checked){
-        ui->radioButton_ALL->setChecked(false);
-    }
-}
-
-
-void MainWindow::on_checkBox_TCP_pressed()
-{
-    if(ui->checkBox_TCP->checkState() == Qt::Checked){
-        ui->radioButton_ALL->setChecked(false);
-    }
-}
-
-
-void MainWindow::on_listWidget_itemDoubleClicked(QListWidgetItem *item)
-{
-    selected_dev = item->text().toStdString();
-    if(!ui->listWidget->currentItem()->isSelected()){
-        ui->statusbar->showMessage("Choose dev");
-        return;
-    }
-
-    if(!ui->radioButton_ALL->isChecked()){
-        if(ui->checkBox_TCP->checkState() == Qt::Checked) tcp = true;
-        if(ui->checkBox_UDP->checkState() == Qt::Checked) udp = true;
-        if(ui->checkBox_ICMP->checkState() == Qt::Checked) icmp = true;
-    }else all = true;
-
-    if(all == false && tcp == false && udp == false && icmp == false){
-        ui->statusbar->showMessage("Choose protocol");
-        return;
-    }
-
-    hide();
-    sec = new SecondMainWindow(this);
-    sec->show();
-}
-
-
-
-
-
