@@ -16,8 +16,6 @@
 #include <vector>
 #include <nlohmann/json.hpp>
 
-using json = nlohmann::json;
-
 namespace {
 // the statistic lists only the busiest hosts, it is redrawn several times a second
 constexpr std::size_t MAX_STAT_HOSTS = 20;
@@ -234,7 +232,7 @@ std::string PacketHandler::json() const {
 void PacketHandler::saveJson(const pcap_pkthdr *header, const std::string &protocol,
                              const std::string &srcIP, const std::string &dstIP,
                              int srcPort, int dstPort, const std::string &threats) {
-    json j;
+    nlohmann::json j;
     j["timestamp"] = formatTimestamp(header->ts);
     j["protocol"] = protocol;
     j["src_ip"] = srcIP;
